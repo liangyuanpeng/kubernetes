@@ -42,7 +42,7 @@ KUBE_BUILD_IMAGE_CROSS_TAG="$(cat "${KUBE_ROOT}/build/build-image/cross/VERSION"
 readonly KUBE_BUILD_IMAGE_CROSS_TAG
 
 readonly KUBE_DOCKER_REGISTRY="${KUBE_DOCKER_REGISTRY:-registry.k8s.io}"
-KUBE_BASE_IMAGE_REGISTRY="${KUBE_BASE_IMAGE_REGISTRY:-registry.k8s.io/build-image}"
+KUBE_BASE_IMAGE_REGISTRY="${KUBE_BASE_IMAGE_REGISTRY:-registry.lank8s.cn/build-image}"
 readonly KUBE_BASE_IMAGE_REGISTRY
 
 # This version number is used to cause everyone to rebuild their data containers
@@ -121,9 +121,9 @@ kube::build::get_docker_wrapped_binaries() {
   ### in build/BUILD. And kube::golang::server_image_targets
   local targets=(
     "kube-apiserver,${KUBE_APISERVER_BASE_IMAGE}"
-    "kube-controller-manager,${KUBE_CONTROLLER_MANAGER_BASE_IMAGE}"
-    "kube-scheduler,${KUBE_SCHEDULER_BASE_IMAGE}"
-    "kube-proxy,${KUBE_PROXY_BASE_IMAGE}"
+    # "kube-controller-manager,${KUBE_CONTROLLER_MANAGER_BASE_IMAGE}"
+    # "kube-scheduler,${KUBE_SCHEDULER_BASE_IMAGE}"
+    # "kube-proxy,${KUBE_PROXY_BASE_IMAGE}"
   )
 
   echo "${targets[@]}"

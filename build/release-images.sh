@@ -25,15 +25,23 @@ KUBE_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
 source "${KUBE_ROOT}/build/common.sh"
 source "${KUBE_ROOT}/build/lib/release.sh"
 
+echo "=========================KUBE_SERVER_IMAGE_TARGETS:  ${KUBE_SERVER_IMAGE_TARGETS[*]}"
+
 CMD_TARGETS="${KUBE_SERVER_IMAGE_TARGETS[*]}"
+# CMD_TARGETS="${WHAT}"
+# CMD_TARGETS="cmd/kube-apiserver"
 if [[ "${KUBE_BUILD_CONFORMANCE}" =~ [yY] ]]; then
+    echo "=========================KUBE_CONFORMANCE_IMAGE_TARGETS:  ${KUBE_CONFORMANCE_IMAGE_TARGETS}"
     CMD_TARGETS="${CMD_TARGETS} ${KUBE_CONFORMANCE_IMAGE_TARGETS[*]}"
 fi
 # include extra WHAT if specified so you can build docker images + binaries
 # in one call with a single pass of syncing to the container + generating code
 if [[ -n "${KUBE_EXTRA_WHAT:-}" ]]; then
+    echo "=========================KUBE_EXTRA_WHAT:  ${KUBE_EXTRA_WHAT}"
     CMD_TARGETS="${CMD_TARGETS} ${KUBE_EXTRA_WHAT}"
 fi
+
+echo "=========================CMD_TARGETS:  ${CMD_TARGETS}"
 
 kube::build::verify_prereqs
 kube::build::build_image
