@@ -133,7 +133,7 @@ func (spc *StatefulPodControl) CreateStatefulPod(ctx context.Context, set *apps.
 		}
 	}
 	spc.recordPodEvent("create", set, pod, err)
-	klog.Infof("==================lan.dev.CreateStatefulPod2:%s|%s|%s", set.Status.CurrentRevision, pod.Name, pod.Spec.Containers[0].Image)
+	klog.Infof("==================lan.dev.CreateStatefulPod2:%s|%s|%s|%s", set.Status.CurrentRevision, pod.Name, pod.Spec.Containers[0].Image, pod.Labels)
 	return err
 }
 

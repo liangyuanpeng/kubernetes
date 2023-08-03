@@ -352,6 +352,7 @@ func computeReplicaStatus(pods []*v1.Pod, minReadySeconds int32, currentRevision
 			if getPodRevision(pod) == updateRevision.Name {
 				status.updatedReplicas++
 			}
+			klog.Infof("==================.lan.dev.computeReplicaStatus update replicas:%s|%s|%s|%s", pod.Name, getPodRevision(pod), currentRevision.Name, updateRevision.Name)
 		}
 	}
 	return status
