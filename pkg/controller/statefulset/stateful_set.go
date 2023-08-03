@@ -334,6 +334,7 @@ func (ssc *StatefulSetController) canAdoptFunc(ctx context.Context, set *apps.St
 
 // adoptOrphanRevisions adopts any orphaned ControllerRevisions matched by set's Selector.
 func (ssc *StatefulSetController) adoptOrphanRevisions(ctx context.Context, set *apps.StatefulSet) error {
+	klog.Infof("==================lan.dev.adoptOrphanRevisions1:%s", set.ResourceVersion)
 	revisions, err := ssc.control.ListRevisions(set)
 	if err != nil {
 		return err
@@ -351,6 +352,7 @@ func (ssc *StatefulSetController) adoptOrphanRevisions(ctx context.Context, set 
 		}
 		return ssc.control.AdoptOrphanRevisions(set, orphanRevisions)
 	}
+	klog.Infof("==================lan.dev.adoptOrphanRevisions2:%s|%s", set.ResourceVersion, set.Status.CurrentRevision)
 	return nil
 }
 
@@ -462,6 +464,7 @@ func (ssc *StatefulSetController) sync(ctx context.Context, key string) error {
 		utilruntime.HandleError(fmt.Errorf("unable to retrieve StatefulSet %v from store: %v", key, err))
 		return err
 	}
+	klog.Infof("===================lan.dev.sync.set:%s|%s", set.ResourceVersion, set.Status.CurrentRevision)
 
 	selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
 	if err != nil {
