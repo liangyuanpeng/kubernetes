@@ -9,6 +9,8 @@ jobs:
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
 
       - name: install Go
         uses: actions/setup-go@v3
@@ -39,6 +41,8 @@ jobs:
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
 
       - name: install Go
         uses: actions/setup-go@v3
@@ -48,4 +52,4 @@ jobs:
 #https://github.com/kubernetes-sigs/kind/blob/main/hack/ci/e2e-k8s.sh
       - name: run
         run: |
-          make all WHAT="cmd/kubectl test/e2e/e2e.test
+          make all WHAT="cmd/kubectl test/e2e/e2e.test"
