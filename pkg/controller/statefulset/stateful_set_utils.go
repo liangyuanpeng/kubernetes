@@ -590,6 +590,7 @@ func completeRollingUpdate(set *apps.StatefulSet, status *apps.StatefulSetStatus
 	if set.Spec.UpdateStrategy.Type == apps.RollingUpdateStatefulSetStrategyType &&
 		status.UpdatedReplicas == status.Replicas &&
 		status.ReadyReplicas == status.Replicas {
+		klog.Infof("=====================lan.dev.completeRollingUpdate:%s|%s", status.CurrentRevision, status.UpdateRevision)
 		status.CurrentReplicas = status.UpdatedReplicas
 		status.CurrentRevision = status.UpdateRevision
 	}

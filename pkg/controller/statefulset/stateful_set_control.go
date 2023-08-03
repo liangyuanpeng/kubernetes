@@ -204,7 +204,7 @@ func (ssc *defaultStatefulSetControl) truncateHistory(
 	}
 	historyLen := len(history)
 	historyLimit := int(*set.Spec.RevisionHistoryLimit)
-	klog.Info("====================lan.dev.truncateHistory.historyLimit:", historyLimit)
+	// klog.Info("====================lan.dev.truncateHistory.historyLimit:", historyLimit)
 	if historyLen <= historyLimit {
 		return nil
 	}
@@ -543,6 +543,7 @@ func (ssc *defaultStatefulSetControl) updateStatefulSet(
 	collisionCount int32,
 	pods []*v1.Pod) (*apps.StatefulSetStatus, error) {
 	logger := klog.FromContext(ctx)
+	logger.Info("===================lan.dev.updateStatefulSet0.ApplyRevision:", "name", set.Name, "cname", currentRevision.Name, "cversion", currentRevision.ResourceVersion, "uname", updateRevision.Name, "uversion", updateRevision.ResourceVersion)
 	// get the current and update revisions of the set.
 	currentSet, err := ApplyRevision(set, currentRevision)
 	if err != nil {
