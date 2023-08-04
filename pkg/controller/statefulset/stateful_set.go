@@ -447,9 +447,6 @@ func (ssc *StatefulSetController) worker(ctx context.Context) {
 func (ssc *StatefulSetController) sync(ctx context.Context, key string) error {
 	startTime := time.Now()
 	logger := klog.FromContext(ctx)
-	defer func() {
-		logger.V(4).Info("Finished syncing statefulset", "key", key, "time", time.Since(startTime))
-	}()
 
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
@@ -464,7 +461,12 @@ func (ssc *StatefulSetController) sync(ctx context.Context, key string) error {
 		utilruntime.HandleError(fmt.Errorf("unable to retrieve StatefulSet %v from store: %v", key, err))
 		return err
 	}
-	klog.Infof("===================lan.dev.sync.set:%s|%s", set.ResourceVersion, set.Status.CurrentRevision)
+	defer func() {
+		// logger.V(4).Info("Finished syncing statefulset", "key", key, "time", time.Since(startTime))
+		logger.Info("Finished syncing statefulset", "set", set.Status.CurrentRevision, "key", key, "time", time.Since(startTime))
+	}()
+	logger.Info("===================lan.dev.sync.set", "setCRevision", set.Status.CurrentRevision, "rversion", set.ResourceVersion, "cversion", set.Status.CurrentRevision)
+	// klog.Infof("===================lan.dev.sync.set:%s|%s", set.ResourceVersion, set.Status.CurrentRevision)
 
 	selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
 	if err != nil {

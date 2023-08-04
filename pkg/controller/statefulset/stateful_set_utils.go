@@ -17,6 +17,7 @@ limitations under the License.
 package statefulset
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -590,7 +591,8 @@ func completeRollingUpdate(set *apps.StatefulSet, status *apps.StatefulSetStatus
 	if set.Spec.UpdateStrategy.Type == apps.RollingUpdateStatefulSetStrategyType &&
 		status.UpdatedReplicas == status.Replicas &&
 		status.ReadyReplicas == status.Replicas {
-		klog.Infof("=====================lan.dev.completeRollingUpdate:%s|%s", status.CurrentRevision, status.UpdateRevision)
+		logger := klog.FromContext(context.TODO())
+		logger.Info("=====================lan.dev.completeRollingUpdate:", "cRevision", status.CurrentRevision, "uRevision", status.UpdateRevision, "ureplicas", set.Status.UpdatedReplicas, "statusReplicas", status.Replicas)
 		status.CurrentReplicas = status.UpdatedReplicas
 		status.CurrentRevision = status.UpdateRevision
 	}

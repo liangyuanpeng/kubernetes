@@ -83,6 +83,7 @@ type defaultStatefulSetControl struct {
 func (ssc *defaultStatefulSetControl) UpdateStatefulSet(ctx context.Context, set *apps.StatefulSet, pods []*v1.Pod) (*apps.StatefulSetStatus, error) {
 	set = set.DeepCopy() // set is modified when a new revision is created in performUpdate. Make a copy now to avoid mutation errors.
 
+	logger := klog.FromContext(context.TODO())
 	// list all revisions and sort them
 	revisions, err := ssc.ListRevisions(set)
 	if err != nil {
@@ -101,7 +102,8 @@ func (ssc *defaultStatefulSetControl) UpdateStatefulSet(ctx context.Context, set
 		}
 		return nil, utilerrors.NewAggregate(append(errs, ssc.truncateHistory(set, pods, revisions, currentRevision, updateRevision)))
 	}
-	klog.Infof("=============lan.dev.UpdateStatefulSet.revisions:%s|%s|%s", currentRevision.Name, updateRevision.Name, status.CurrentRevision)
+	// klog.Infof("=============lan.dev.UpdateStatefulSet.revisions:%s|%s|%s", currentRevision.Name, updateRevision.Name, status.CurrentRevision)
+	logger.Info("=============lan.dev.UpdateStatefulSet.revisions:", "cname", currentRevision.Name, "uname", updateRevision.Name, "crevision", status.CurrentRevision)
 
 	// maintain the set's revision history limit
 	return status, ssc.truncateHistory(set, pods, revisions, currentRevision, updateRevision)
@@ -329,10 +331,11 @@ type replicaStatus struct {
 
 func computeReplicaStatus(pods []*v1.Pod, minReadySeconds int32, currentRevision, updateRevision *apps.ControllerRevision) replicaStatus {
 	status := replicaStatus{}
+	logger := klog.FromContext(context.TODO())
 	for _, pod := range pods {
-		if isCreated(pod) {
-			status.replicas++
-		}
+		// if isCreated(pod) {
+		status.replicas++
+		// }
 
 		// count the number of running and ready replicas
 		if isRunningAndReady(pod) {
@@ -352,9 +355,13 @@ func computeReplicaStatus(pods []*v1.Pod, minReadySeconds int32, currentRevision
 			if getPodRevision(pod) == updateRevision.Name {
 				status.updatedReplicas++
 			}
-			klog.Infof("==================.lan.dev.computeReplicaStatus update replicas:%s|%s|%s|%s", pod.Name, getPodRevision(pod), currentRevision.Name, updateRevision.Name)
+
+			logger.Info("==================.lan.dev.computeReplicaStatus update replics", "podname", pod.Name, "podRevision", getPodRevision(pod), "cname", currentRevision.Name, "uname", updateRevision.Name)
+			// klog.Infof("==================.lan.dev.computeReplicaStatus update replicas:%s|%s|%s|%s", pod.Name, getPodRevision(pod), currentRevision.Name, updateRevision.Name)
 		}
 	}
+	logger.Info("==================.lan.dev.computeReplicaStatus update replicas2", "creplicas", status.currentReplicas, "uReplicas", status.updatedReplicas)
+	// klog.Infof("==================.lan.dev.computeReplicaStatus update replicas2:%d|%d", status.currentReplicas, status.updatedReplicas)
 	return status
 }
 
@@ -586,6 +593,21 @@ func (ssc *defaultStatefulSetControl) updateStatefulSet(
 		}
 		// If the ordinal could not be parsed (ord < 0), ignore the Pod.
 	}
+
+	// make sure to update the latest status even if there is an error later
+	defer func() {
+		// update the set's status
+		statusErr := ssc.updateStatefulSetStatus(ctx, set, &status)
+		if statusErr == nil {
+			klog.V(4).InfoS("Updated status", "statefulSet", klog.KObj(set),
+				"replicas", status.Replicas,
+				"readyReplicas", status.ReadyReplicas,
+				"currentReplicas", status.CurrentReplicas,
+				"updatedReplicas", status.UpdatedReplicas)
+		} else {
+			klog.V(4).InfoS("Could not update status", "statefulSet", klog.KObj(set), "err", statusErr)
+		}
+	}()
 
 	// for any empty indices in the sequence [0,set.Spec.Replicas) create a new Pod at the correct revision
 	for ord := getStartOrdinal(set); ord <= getEndOrdinal(set); ord++ {
