@@ -333,6 +333,9 @@ func computeReplicaStatus(pods []*v1.Pod, minReadySeconds int32, currentRevision
 	status := replicaStatus{}
 	logger := klog.FromContext(context.TODO())
 	for _, pod := range pods {
+		if !isCreated(pod) {
+			logger.Info("pod.is not created:", "podname", pod.Name, "status", pod.Status)
+		}
 		// if isCreated(pod) {
 		status.replicas++
 		// }
