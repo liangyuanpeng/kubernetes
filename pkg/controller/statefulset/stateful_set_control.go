@@ -595,19 +595,19 @@ func (ssc *defaultStatefulSetControl) updateStatefulSet(
 	}
 
 	// make sure to update the latest status even if there is an error later
-	defer func() {
-		// update the set's status
-		statusErr := ssc.updateStatefulSetStatus(ctx, set, &status)
-		if statusErr == nil {
-			klog.V(4).InfoS("Updated status", "statefulSet", klog.KObj(set),
-				"replicas", status.Replicas,
-				"readyReplicas", status.ReadyReplicas,
-				"currentReplicas", status.CurrentReplicas,
-				"updatedReplicas", status.UpdatedReplicas)
-		} else {
-			klog.V(4).InfoS("Could not update status", "statefulSet", klog.KObj(set), "err", statusErr)
-		}
-	}()
+	// defer func() {
+	// 	// update the set's status
+	// 	statusErr := ssc.updateStatefulSetStatus(ctx, set, &status)
+	// 	if statusErr == nil {
+	// 		klog.V(4).InfoS("Updated status", "statefulSet", klog.KObj(set),
+	// 			"replicas", status.Replicas,
+	// 			"readyReplicas", status.ReadyReplicas,
+	// 			"currentReplicas", status.CurrentReplicas,
+	// 			"updatedReplicas", status.UpdatedReplicas)
+	// 	} else {
+	// 		klog.V(4).InfoS("Could not update status", "statefulSet", klog.KObj(set), "err", statusErr)
+	// 	}
+	// }()
 
 	// for any empty indices in the sequence [0,set.Spec.Replicas) create a new Pod at the correct revision
 	for ord := getStartOrdinal(set); ord <= getEndOrdinal(set); ord++ {
