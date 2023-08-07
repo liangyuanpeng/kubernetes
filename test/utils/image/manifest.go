@@ -132,7 +132,7 @@ var (
 	initRegistry = RegistryList{
 		GcAuthenticatedRegistry:  "gcr.io/authenticated-image-pulling",
 		PromoterE2eRegistry:      "registry.k8s.io/e2e-test-images",
-		BuildImageRegistry:       "registry.k8s.io/build-image",
+		BuildImageRegistry:       "registry.lank8s.cn/build-image",
 		InvalidRegistry:          "invalid.registry.k8s.io/invalid",
 		GcEtcdRegistry:           "registry.k8s.io",
 		GcRegistry:               "registry.k8s.io",
