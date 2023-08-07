@@ -1,6 +1,8 @@
 name: build
 
-on: push
+on: 
+  push:
+    branches: [ build_k8s ]
 
 jobs:
 
