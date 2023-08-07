@@ -30,5 +30,8 @@ jobs:
 
       - name: run
         run: |
-          pwd
+          cd .. 
+          docker rmi `docker images -aq`
+          mkdir -p /home/runner/go/src/k8s.io
+          mv kubernetes /home/runner/go/src/k8s.io/
           kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
