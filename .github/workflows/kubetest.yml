@@ -1,7 +1,9 @@
 name: kubetest
 #https://github.com/kubernetes/community/blob/master/contributors/devel/sig-testing/e2e-tests.md
 
-on: push
+on:
+  push:
+    # branches: [ build_k8s ]
 
 jobs:
 
@@ -20,8 +22,12 @@ jobs:
 
       - name: install kubetest2
         run: |
-          go install sigs.k8s.io/kubetest2/...@latest
+          git clone https://github.com/kubernetes/test-infra.git
+          cd test-infra
+          go install k8s.io/test-infra/kubetest
+          cd .. 
+          rm -rf test-infra
 
       - name: run
         run: |
-          kubetest2 kind -v 2 --build  --up --down
+          kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
