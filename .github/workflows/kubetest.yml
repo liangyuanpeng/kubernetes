@@ -30,4 +30,5 @@ jobs:
 
       - name: run
         run: |
+          pwd
           kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
