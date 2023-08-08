@@ -34,10 +34,6 @@ jobs:
           oras pull ghcr.io/liangyuanpeng/files:kubetest
           mv kubetest /usr/local/bin/kubetest
 
-      - name: clean 
-        run: |
-          apt sudo autoremove
-
       - name: run
         run: |
           cd .. 
