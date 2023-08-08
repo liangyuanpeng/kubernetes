@@ -36,7 +36,7 @@ jobs:
 
       - name: clean 
         run: |
-          apt autoremove
+          apt sudo autoremove
 
       - name: run
         run: |
