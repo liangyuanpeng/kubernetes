@@ -18,20 +18,28 @@ steps:
 
 - script: |
     echo Add other tasks to build, test, and deploy your project. See https://aka.ms/yaml
-    git clone https://github.com/kubernetes/test-infra.git
-    cd test-infra
-    go install k8s.io/test-infra/kubetest
-    cd .. 
-    rm -rf test-infra
+    wget https://github.com/oras-project/oras/releases/download/v1.0.0/oras_1.0.0_linux_amd64.tar.gz
+    tar -xf https://github.com/oras-project/oras/releases/download/v1.0.0/oras_1.0.0_linux_amd64.tar.gz
+    rm -f oras_1.0.0_linux_amd64.tar.gz
+    mv oras /usr/local/bin 
+    oras pull ghcr.io/liangyuanpeng/files:kubetest
+    #git clone https://github.com/kubernetes/test-infra.git
+    #cd test-infra
+    #go install k8s.io/test-infra/kubetest
+    #cd .. 
+    #rm -rf test-infra
+    pwd 
+    ls
     cd .. 
     docker rmi `docker images -aq`
     df -h
     pwd 
+    ls
     echo $GOPATH
-    mkdir -p /home/runner/go/src/k8s.io
-    mv kubernetes /home/runner/go/src/k8s.io/
-    chmod -R 777 /home/runner/go/src/k8s.io/kubernetes
-    cd /home/runner/go/src/k8s.io/kubernetes
+    mkdir -p /home/vsts/work/go/src/k8s.io
+    mv kubernetes /home/vsts/work/go/src/k8s.io/
+    chmod -R 777 /home/vsts/work/go/src/k8s.io/kubernetes
+    cd /home/vsts/work/go/src/k8s.io/kubernetes
     kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --down
   displayName: 'Run ci'
   timeoutInMinutes: 200
