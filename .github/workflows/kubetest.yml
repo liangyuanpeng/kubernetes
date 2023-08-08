@@ -32,6 +32,7 @@ jobs:
         run: |
           cd .. 
           docker rmi `docker images -aq`
+          df -h
           mkdir -p /home/runner/go/src/k8s.io
           mv kubernetes /home/runner/go/src/k8s.io/
           chmod -R 777 /home/runner/go/src/k8s.io/kubernetes

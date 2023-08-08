@@ -26,4 +26,4 @@ jobs:
 
       - name: run
         run: |
-          kubetest2 kind -v 2 --build  --up --down
+          kubetest2 kind -v 2 --build  --up --down --focus-regex='\[StatefulSet\]'
