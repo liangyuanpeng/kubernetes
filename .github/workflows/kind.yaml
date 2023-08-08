@@ -7,6 +7,8 @@ jobs:
 
   kind:
     runs-on: ubuntu-22.04
+    permissions:
+      packages: write
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
@@ -23,8 +25,12 @@ jobs:
           wget -q https://github.com/kubernetes-sigs/kind/releases/download/v0.20.0/kind-linux-amd64
           chmod +x kind-linux-amd64
           mv kind-linux-amd64 /usr/local/bin/kind
+          VERSION=`git describe`
           mkdir tmp
           cd tmp
-          kind build node-image --image ghcr.io/liangyuanpeng/kindest/node:latest --kube-root $PWD/../
+          kind build node-image --image ghcr.io/liangyuanpeng/kindest/node:$VERSION --kube-root $PWD/../
           tree . 
           docker images
+          docker push ghcr.io/liangyuanpeng/kindest/node:$VERSION
+          docker tag ghcr.io/liangyuanpeng/kindest/node:$VERSION ghcr.io/liangyuanpeng/kindest/node:v0.20.0-$VERSION
+          docker push ghcr.io/liangyuanpeng/kindest/node:v0.20.0-$VERSION
