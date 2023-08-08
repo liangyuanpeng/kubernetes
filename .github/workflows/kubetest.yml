@@ -45,7 +45,8 @@ jobs:
           chmod -R 777 /home/runner/go/src/k8s.io/kubernetes
           cd /home/runner/go/src/k8s.io/kubernetes
           #kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
-          kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --down
+          #kubetest  --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
+          kubetest --build --up --test --test_args="--ginkgo.focus=\[Job\]" --down
           #cd test/e2e 
           #go get github.com/onsi/ginkgo/v2
           #ginkgo --focus="\[StatefulSet\]"
