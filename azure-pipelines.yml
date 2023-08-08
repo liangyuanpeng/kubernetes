@@ -1,0 +1,37 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+- ci
+
+pr:
+  - "*"
+
+pool:
+  vmImage: ubuntu-latest
+
+
+steps:
+
+- script: |
+    echo Add other tasks to build, test, and deploy your project. See https://aka.ms/yaml
+    git clone https://github.com/kubernetes/test-infra.git
+    cd test-infra
+    go install k8s.io/test-infra/kubetest
+    cd .. 
+    rm -rf test-infra
+    cd .. 
+    docker rmi `docker images -aq`
+    df -h
+    pwd 
+    echo $GOPATH
+    mkdir -p /home/runner/go/src/k8s.io
+    mv kubernetes /home/runner/go/src/k8s.io/
+    chmod -R 777 /home/runner/go/src/k8s.io/kubernetes
+    cd /home/runner/go/src/k8s.io/kubernetes
+    kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --down
+  displayName: 'Run ci'
+  timeoutInMinutes: 200
