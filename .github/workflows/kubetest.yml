@@ -32,7 +32,7 @@ jobs:
           #cd .. 
           #rm -rf test-infra
           oras pull ghcr.io/liangyuanpeng/files:kubetest
-          mv kubetest /usr/local/bin/kubetest
+          mv kubetest /usr/local/bin/
 
       - name: run
         run: |
