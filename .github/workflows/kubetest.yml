@@ -20,13 +20,19 @@ jobs:
         with:
           go-version: 1.20.6
 
+      - uses: oras-project/setup-oras@v1
+        with:
+          version: 1.0.0
+
       - name: install kubetest
         run: |
-          git clone https://github.com/kubernetes/test-infra.git
-          cd test-infra
-          go install k8s.io/test-infra/kubetest
-          cd .. 
-          rm -rf test-infra
+          #git clone https://github.com/kubernetes/test-infra.git
+          #cd test-infra
+          #go install k8s.io/test-infra/kubetest
+          #cd .. 
+          #rm -rf test-infra
+          oras pull ghcr.io/liangyuanpeng/files:kubetest
+          mv kubetest /usr/local/bin/kubetest
 
       - name: clean 
         run: |
