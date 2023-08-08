@@ -28,6 +28,10 @@ jobs:
           cd .. 
           rm -rf test-infra
 
+      - name: clean 
+        run: |
+          apt autoremove
+
       - name: run
         run: |
           cd .. 
@@ -40,4 +44,5 @@ jobs:
           #kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
           kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --down
           #cd test/e2e 
+          #go get github.com/onsi/ginkgo/v2
           #ginkgo --focus="\[StatefulSet\]"
