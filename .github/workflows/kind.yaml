@@ -31,6 +31,7 @@ jobs:
           kind build node-image --image ghcr.io/liangyuanpeng/kindest/node:$VERSION --kube-root $PWD/../
           tree . 
           docker images
+          docker login ghcr.io -uliangyuanpeng -p${{ secrets.GITHUB_TOKEN }}
           docker push ghcr.io/liangyuanpeng/kindest/node:$VERSION
           docker tag ghcr.io/liangyuanpeng/kindest/node:$VERSION ghcr.io/liangyuanpeng/kindest/node:v0.20.0-$VERSION
           docker push ghcr.io/liangyuanpeng/kindest/node:v0.20.0-$VERSION
