@@ -3,7 +3,10 @@ name: kubetest
 
 on:
   push:
+    # path-ignore:
+    #   - '**/*.md'
     # branches: [ build_k8s ]
+    
 
 jobs:
 
