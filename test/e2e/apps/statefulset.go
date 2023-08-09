@@ -19,6 +19,7 @@ package apps
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -178,6 +179,8 @@ var _ = SIGDescribe("StatefulSet", func() {
 			cmd = "if [ \"$(cat /data/hostname-symlink)\" = \"$(hostname)\" ]; then exit 0; else exit 1; fi"
 			ginkgo.By("Running " + cmd + " in all stateful pods")
 			framework.ExpectNoError(e2estatefulset.ExecInStatefulPods(ctx, c, ss, cmd))
+			framework.ExpectNoError(errors.New("hello"), "asd")
+
 		})
 
 		// This can't be Conformance yet because it depends on a default
