@@ -17,10 +17,11 @@ limitations under the License.
 package cache
 
 import (
+	"context"
 	"testing"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -61,7 +62,7 @@ func TestMutationDetector(t *testing.T) {
 
 	fakeWatch.Add(pod)
 
-	wait.PollImmediate(100*time.Millisecond, wait.ForeverTestTimeout, func() (bool, error) {
+	wait.PollUntilContextTimeout(context.TODO(), 100*time.Millisecond, wait.ForeverTestTimeout, true, func(ctx context.Context) (bool, error) {
 		detector.addedObjsLock.Lock()
 		defer detector.addedObjsLock.Unlock()
 		return len(detector.addedObjs) > 0, nil

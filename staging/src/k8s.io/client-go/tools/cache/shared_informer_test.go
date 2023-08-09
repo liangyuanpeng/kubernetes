@@ -74,7 +74,7 @@ func (l *testListener) handle(obj interface{}) {
 
 func (l *testListener) ok() bool {
 	fmt.Println("polling")
-	err := wait.PollImmediate(100*time.Millisecond, 2*time.Second, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.TODO(), 100*time.Millisecond, 2*time.Second, true, func(ctx context.Context) (bool, error) {
 		if l.satisfiedExpectations() {
 			return true, nil
 		}
@@ -845,7 +845,7 @@ func TestAddOnStoppedSharedInformer(t *testing.T) {
 	go informer.Run(stop)
 	close(stop)
 
-	err := wait.PollImmediate(100*time.Millisecond, 2*time.Second, func() (bool, error) {
+	err := wait.PollUntilContextTimeout(context.TODO(), 100*time.Millisecond, 2*time.Second,true,func(ctx context.Context)(bool, error) {
 		if informer.IsStopped() {
 			return true, nil
 		}

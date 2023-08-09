@@ -17,6 +17,7 @@ limitations under the License.
 package cache
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -229,7 +230,7 @@ func TestHammerController(t *testing.T) {
 	go controller.Run(stop)
 
 	// Let's wait for the controller to do its initial sync
-	wait.Poll(100*time.Millisecond, wait.ForeverTestTimeout, func() (bool, error) {
+	wait.PollUntilContextTimeout(context.TODO(), 100*time.Millisecond, wait.ForeverTestTimeout, false, func(ctx context.Context) (bool, error) {
 		return controller.HasSynced(), nil
 	})
 	if !controller.HasSynced() {
