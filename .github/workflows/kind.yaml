@@ -23,6 +23,7 @@ jobs:
       - name: print version 
         run: |
           VERSION=`git describe`
+          echo $VERSION
 
       - name: run
         run: |
