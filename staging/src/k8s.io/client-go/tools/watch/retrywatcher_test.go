@@ -553,7 +553,7 @@ func TestRetryWatcher(t *testing.T) {
 			var counter uint32
 			// We always count with the last watch reestablishing which is imminent but still a race.
 			// We will wait for the last watch to reestablish to avoid it.
-			err = wait.PollImmediate(10*time.Millisecond, 10*time.Second, func() (done bool, err error) {
+			err = wait.PollUntilContextTimeout(context.TODO(), 10*time.Millisecond, 10*time.Second, func() (done bool, err error) {
 				counter = atomic.LoadUint32(atomicCounter)
 				return counter == tc.watchCount, nil
 			})

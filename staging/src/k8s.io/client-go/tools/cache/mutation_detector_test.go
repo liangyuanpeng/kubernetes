@@ -61,7 +61,7 @@ func TestMutationDetector(t *testing.T) {
 
 	fakeWatch.Add(pod)
 
-	wait.PollImmediate(100*time.Millisecond, wait.ForeverTestTimeout, func() (bool, error) {
+	wait.PollUntilContextTimeout(context.TODO(), 100*time.Millisecond, wait.ForeverTestTimeout, true, func(ctx context.Context) (bool, error) {
 		detector.addedObjsLock.Lock()
 		defer detector.addedObjsLock.Unlock()
 		return len(detector.addedObjs) > 0, nil
