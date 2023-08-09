@@ -28,10 +28,12 @@ jobs:
           VERSION=`git describe`
           mkdir tmp
           cd tmp
-          kind build node-image --base-image docker.io/kindest/base:v20230330-89a4b81b --image ghcr.io/liangyuanpeng/kindest/node:$VERSION --kube-root $PWD/../
+          #--base-image docker.io/kindest/base:v20230330-89a4b81b
+          kind build node-image --image ghcr.io/liangyuanpeng/kindest/node:$VERSION --kube-root $PWD/../
           tree . 
           docker images
           docker login ghcr.io -uliangyuanpeng -p${{ secrets.GITHUB_TOKEN }}
           docker push ghcr.io/liangyuanpeng/kindest/node:$VERSION
           docker tag ghcr.io/liangyuanpeng/kindest/node:$VERSION ghcr.io/liangyuanpeng/kindest/node:v0.20.0-$VERSION
           docker push ghcr.io/liangyuanpeng/kindest/node:v0.20.0-$VERSION
+          kind build node-image --help
