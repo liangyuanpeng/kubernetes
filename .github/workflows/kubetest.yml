@@ -51,7 +51,16 @@ jobs:
           #kubetest  --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
           #kubetest --build --up --test --test_args="--ginkgo.focus=\[sig-apps\]StatefulSet" --down
           cd test/e2e 
-          kind create cluster --image ghcr.io/liangyuanpeng/kindest/node:v1.29.0-alpha.0-84-g97d26bcdc1e
+          cat << EOF >> config.yaml
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          networking:
+            apiServerPort: 6443
+          nodes:
+          - role: control-plane
+            image: ghcr.io/liangyuanpeng/kindest/node:v1.29.0-alpha.0-84-g97d26bcdc1e
+          EOF
+          kind create cluster --config config.yaml
           oras pull ghcr.io/liangyuanpeng/files:ginkgo
           chmod +x ginkgo
           mv ginkgo /usr/local/bin/ginkgo
