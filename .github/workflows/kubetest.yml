@@ -49,7 +49,10 @@ jobs:
           cd /home/runner/go/src/k8s.io/kubernetes
           #kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
           #kubetest  --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
-          kubetest --build --up --test --test_args="--ginkgo.focus=\[sig-apps\]StatefulSet" --down
-          #cd test/e2e 
-          #go get github.com/onsi/ginkgo/v2
-          #ginkgo --focus="\[StatefulSet\]"
+          #kubetest --build --up --test --test_args="--ginkgo.focus=\[sig-apps\]StatefulSet" --down
+          cd test/e2e 
+          kind create cluster --image ghcr.io/liangyuanpeng/kindest/node:v1.29.0-alpha.0-84-g97d26bcdc1e
+          oras pull ghcr.io/liangyuanpeng/files:ginkgo
+          chmod +x ginkgo
+          mv ginkgo /usr/local/bin/ginkgo
+          ginkgo --focus="\[sig-apps\]StatefulSet"
