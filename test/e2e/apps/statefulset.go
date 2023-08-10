@@ -137,10 +137,13 @@ var _ = SIGDescribe("StatefulSet", func() {
 		// This can't be Conformance yet because it depends on a default
 		// StorageClass and a dynamic provisioner.
 		ginkgo.It("should provide basic identity", func(ctx context.Context) {
+
 			ginkgo.By("Creating statefulset " + ssName + " in namespace " + ns)
 			e2epv.SkipIfNoDefaultStorageClass(ctx, c)
 			*(ss.Spec.Replicas) = 3
 			e2estatefulset.PauseNewPods(ss)
+
+			framework.ExpectNoError(errors.New("hello"), "asd")
 
 			_, err := c.AppsV1().StatefulSets(ns).Create(ctx, ss, metav1.CreateOptions{})
 			framework.ExpectNoError(err)
@@ -179,7 +182,6 @@ var _ = SIGDescribe("StatefulSet", func() {
 			cmd = "if [ \"$(cat /data/hostname-symlink)\" = \"$(hostname)\" ]; then exit 0; else exit 1; fi"
 			ginkgo.By("Running " + cmd + " in all stateful pods")
 			framework.ExpectNoError(e2estatefulset.ExecInStatefulPods(ctx, c, ss, cmd))
-			framework.ExpectNoError(errors.New("hello"), "asd")
 
 		})
 
@@ -390,7 +392,7 @@ var _ = SIGDescribe("StatefulSet", func() {
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: func() *appsv1.RollingUpdateStatefulSetStrategy {
 					return &appsv1.RollingUpdateStatefulSetStrategy{
-						Partition: pointer.Int32(2),
+						Partition: pointer.Int32(1),
 					}
 				}(),
 			}
@@ -399,7 +401,7 @@ var _ = SIGDescribe("StatefulSet", func() {
 					Type: appsv1.RollingUpdateStatefulSetStrategyType,
 					RollingUpdate: func() *appsv1.RollingUpdateStatefulSetStrategy {
 						return &appsv1.RollingUpdateStatefulSetStrategy{
-							Partition: pointer.Int32(2),
+							Partition: pointer.Int32(1),
 						}
 					}(),
 				}
