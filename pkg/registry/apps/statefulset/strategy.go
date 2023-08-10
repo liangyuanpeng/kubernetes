@@ -25,7 +25,6 @@ import (
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/apiserver/pkg/storage/names"
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
-	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/api/legacyscheme"
 	pvcutil "k8s.io/kubernetes/pkg/api/persistentvolumeclaim"
 	"k8s.io/kubernetes/pkg/api/pod"
@@ -86,7 +85,6 @@ func maxUnavailableInUse(statefulset *apps.StatefulSet) bool {
 	if statefulset == nil {
 		return false
 	}
-
 	if statefulset.Spec.UpdateStrategy.RollingUpdate == nil {
 		return false
 	}
