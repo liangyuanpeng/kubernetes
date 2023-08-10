@@ -37,6 +37,7 @@ jobs:
           oras pull ghcr.io/liangyuanpeng/files:kubetest
           chmod +x kubetest
           mv kubetest /usr/local/bin/
+          pwd
 
       - name: run
         run: |
@@ -65,3 +66,5 @@ jobs:
           chmod +x ginkgo
           mv ginkgo /usr/local/bin/ginkgo
           ginkgo --focus="\[sig-apps\]StatefulSet"
+          cd ../../../
+          mv kubernetes /home/runner/
