@@ -86,7 +86,6 @@ func maxUnavailableInUse(statefulset *apps.StatefulSet) bool {
 	if statefulset == nil {
 		return false
 	}
-	klog.Info("=================maxUnavailableInUse:", statefulset.Name)
 
 	if statefulset.Spec.UpdateStrategy.RollingUpdate == nil {
 		return false
