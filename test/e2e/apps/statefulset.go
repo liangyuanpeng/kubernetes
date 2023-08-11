@@ -387,7 +387,7 @@ var _ = SIGDescribe("StatefulSet", func() {
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: func() *appsv1.RollingUpdateStatefulSetStrategy {
 					return &appsv1.RollingUpdateStatefulSetStrategy{
-						Partition: pointer.Int32(1),
+						Partition: pointer.Int32(2),
 					}
 				}(),
 			}
@@ -396,7 +396,7 @@ var _ = SIGDescribe("StatefulSet", func() {
 					Type: appsv1.RollingUpdateStatefulSetStrategyType,
 					RollingUpdate: func() *appsv1.RollingUpdateStatefulSetStrategy {
 						return &appsv1.RollingUpdateStatefulSetStrategy{
-							Partition: pointer.Int32(1),
+							Partition: pointer.Int32(2),
 						}
 					}(),
 				}
@@ -432,6 +432,58 @@ var _ = SIGDescribe("StatefulSet", func() {
 			ginkgo.By("Restoring Pods to the correct revision when they are deleted")
 			deleteStatefulPodAtIndex(ctx, c, 0, ss)
 			deleteStatefulPodAtIndex(ctx, c, 2, ss)
+			e2estatefulset.WaitForRunningAndReady(ctx, c, 3, ss)
+			ss = getStatefulSet(ctx, c, ss.Namespace, ss.Name)
+			pods = e2estatefulset.GetPodList(ctx, c, ss)
+			for i := range pods.Items {
+				if i < int(*ss.Spec.UpdateStrategy.RollingUpdate.Partition) {
+					framework.ExpectEqual(pods.Items[i].Spec.Containers[0].Image, oldImage, fmt.Sprintf("Pod %s/%s has image %s not equal to current image %s",
+						pods.Items[i].Namespace,
+						pods.Items[i].Name,
+						pods.Items[i].Spec.Containers[0].Image,
+						oldImage))
+					framework.ExpectEqual(pods.Items[i].Labels[appsv1.StatefulSetRevisionLabel], currentRevision, fmt.Sprintf("Pod %s/%s has revision %s not equal to current revision %s",
+						pods.Items[i].Namespace,
+						pods.Items[i].Name,
+						pods.Items[i].Labels[appsv1.StatefulSetRevisionLabel],
+						currentRevision))
+				} else {
+					framework.ExpectEqual(pods.Items[i].Spec.Containers[0].Image, newImage, fmt.Sprintf("Pod %s/%s has image %s not equal to new image  %s",
+						pods.Items[i].Namespace,
+						pods.Items[i].Name,
+						pods.Items[i].Spec.Containers[0].Image,
+						newImage))
+					framework.ExpectEqual(pods.Items[i].Labels[appsv1.StatefulSetRevisionLabel], updateRevision, fmt.Sprintf("Pod %s/%s has revision %s not equal to new revision %s",
+						pods.Items[i].Namespace,
+						pods.Items[i].Name,
+						pods.Items[i].Labels[appsv1.StatefulSetRevisionLabel],
+						updateRevision))
+				}
+			}
+
+			ginkgo.By("Restoring Pod-0 to the correct revision when all of the old pod are deleted")
+			ss.Spec.UpdateStrategy = appsv1.StatefulSetUpdateStrategy{
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: func() *appsv1.RollingUpdateStatefulSetStrategy {
+					return &appsv1.RollingUpdateStatefulSetStrategy{
+						Partition: pointer.Int32(1),
+					}
+				}(),
+			}
+			ss, err = updateStatefulSetWithRetries(ctx, c, ns, ss.Name, func(update *appsv1.StatefulSet) {
+				update.Spec.UpdateStrategy = appsv1.StatefulSetUpdateStrategy{
+					Type: appsv1.RollingUpdateStatefulSetStrategyType,
+					RollingUpdate: func() *appsv1.RollingUpdateStatefulSetStrategy {
+						return &appsv1.RollingUpdateStatefulSetStrategy{
+							Partition: pointer.Int32(1),
+						}
+					}(),
+				}
+			})
+			framework.ExpectNoError(err)
+			ss, pods = waitForPartitionedRollingUpdate(ctx, c, ss)
+			//delete all of the old pod
+			deleteStatefulPodAtIndex(ctx, c, 0, ss)
 			e2estatefulset.WaitForRunningAndReady(ctx, c, 3, ss)
 			ss = getStatefulSet(ctx, c, ss.Namespace, ss.Name)
 			pods = e2estatefulset.GetPodList(ctx, c, ss)
