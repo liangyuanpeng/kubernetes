@@ -177,7 +177,7 @@ func createAggregatorServer(aggregatorConfig aggregatorapiserver.CompletedConfig
 	}
 
 	for _, v := range apiServices {
-		klog.Info("*********************lan.dev.apiService:", v.Name, v.Kind)
+		klog.Info("*********************lan.dev.apiService.autoregister-completion:", v.Name, v.Kind)
 	}
 
 	err = aggregatorServer.GenericAPIServer.AddBootSequenceHealthChecks(
