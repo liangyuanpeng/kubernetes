@@ -61,6 +61,7 @@ func createAggregatorConfig(
 	peerProxy utilpeerproxy.Interface,
 	pluginInitializers []admission.PluginInitializer,
 ) (*aggregatorapiserver.Config, error) {
+	klog.Info("-===================lan.dev.createAggregatorConfig:", kubeAPIServerConfig.APIServerID)
 	// make a shallow copy to let us twiddle a few things
 	// most of the config actually remains the same.  We only need to mess with a couple items related to the particulars of the aggregator
 	genericConfig := kubeAPIServerConfig
@@ -173,6 +174,10 @@ func createAggregatorServer(aggregatorConfig aggregatorapiserver.CompletedConfig
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	for _, v := range apiServices {
+		klog.Info("*********************lan.dev.apiService.autoregister-completion:", v.Name, v.Kind)
 	}
 
 	err = aggregatorServer.GenericAPIServer.AddBootSequenceHealthChecks(

@@ -305,6 +305,7 @@ func (c *autoRegisterController) AddAPIServiceToSync(in *v1.APIService) {
 }
 
 func (c *autoRegisterController) addAPIServiceToSync(in *v1.APIService, syncType string) {
+	klog.Info("========================lan.dev.addAPIServiceToSync:", in.Name, in.Kind)
 	c.apiServicesToSyncLock.Lock()
 	defer c.apiServicesToSyncLock.Unlock()
 

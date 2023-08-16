@@ -3,7 +3,7 @@ name: kubetest2
 
 on: 
   push:
-    branches: [ build_k8s ]
+    branches: [ kubetest2 ]
 
 jobs:
 
