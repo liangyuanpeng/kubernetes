@@ -83,10 +83,14 @@ type defaultStatefulSetControl struct {
 func (ssc *defaultStatefulSetControl) UpdateStatefulSet(ctx context.Context, set *apps.StatefulSet, pods []*v1.Pod) (*apps.StatefulSetStatus, error) {
 	set = set.DeepCopy() // set is modified when a new revision is created in performUpdate. Make a copy now to avoid mutation errors.
 
+	logger := klog.FromContext(context.TODO())
 	// list all revisions and sort them
 	revisions, err := ssc.ListRevisions(set)
 	if err != nil {
 		return nil, err
+	}
+	for _, v := range revisions {
+		klog.Info("=============lan.dev.UpdateStatefulSet.revisions:", v.ResourceVersion)
 	}
 	history.SortControllerRevisions(revisions)
 
@@ -98,6 +102,8 @@ func (ssc *defaultStatefulSetControl) UpdateStatefulSet(ctx context.Context, set
 		}
 		return nil, utilerrors.NewAggregate(append(errs, ssc.truncateHistory(set, pods, revisions, currentRevision, updateRevision)))
 	}
+	// klog.Infof("=============lan.dev.UpdateStatefulSet.revisions:%s|%s|%s", currentRevision.Name, updateRevision.Name, status.CurrentRevision)
+	logger.Info("=============lan.dev.UpdateStatefulSet.revisions:", "cname", currentRevision.Name, "uname", updateRevision.Name, "crevision", status.CurrentRevision)
 
 	// maintain the set's revision history limit
 	return status, ssc.truncateHistory(set, pods, revisions, currentRevision, updateRevision)
@@ -108,6 +114,7 @@ func (ssc *defaultStatefulSetControl) performUpdate(
 	var currentStatus *apps.StatefulSetStatus
 	logger := klog.FromContext(ctx)
 	// get the current, and update revisions
+	klog.Info("================lan.dev.performUpdate")
 	currentRevision, updateRevision, collisionCount, err := ssc.getStatefulSetRevisions(set, revisions)
 	if err != nil {
 		return currentRevision, updateRevision, currentStatus, err
@@ -139,7 +146,7 @@ func (ssc *defaultStatefulSetControl) performUpdate(
 		return currentRevision, updateRevision, currentStatus, statusErr
 	}
 
-	logger.V(4).Info("StatefulSet revisions", "statefulSet", klog.KObj(set),
+	logger.Info("StatefulSet revisions", "statefulSet", klog.KObj(set),
 		"currentRevision", currentStatus.CurrentRevision,
 		"updateRevision", currentStatus.UpdateRevision)
 
@@ -157,6 +164,7 @@ func (ssc *defaultStatefulSetControl) ListRevisions(set *apps.StatefulSet) ([]*a
 func (ssc *defaultStatefulSetControl) AdoptOrphanRevisions(
 	set *apps.StatefulSet,
 	revisions []*apps.ControllerRevision) error {
+	klog.Infof("===============lan.dev.AdoptOrphanRevisions:", set.ResourceVersion)
 	for i := range revisions {
 		adopted, err := ssc.controllerHistory.AdoptControllerRevision(set, controllerKind, revisions[i])
 		if err != nil {
@@ -198,6 +206,7 @@ func (ssc *defaultStatefulSetControl) truncateHistory(
 	}
 	historyLen := len(history)
 	historyLimit := int(*set.Spec.RevisionHistoryLimit)
+	// klog.Info("====================lan.dev.truncateHistory.historyLimit:", historyLimit)
 	if historyLen <= historyLimit {
 		return nil
 	}
@@ -272,8 +281,10 @@ func (ssc *defaultStatefulSetControl) getStatefulSetRevisions(
 
 	// if the current revision is nil we initialize the history by setting it to the update revision
 	if currentRevision == nil {
+		klog.Info("====================lan.dev.getStatefulSetRevisions have not currentRevision,use updateRevision:", updateRevision.Name)
 		currentRevision = updateRevision
 	}
+	klog.Infof("====================lan.dev.getStatefulSetRevisions result:%s|%s|%d", currentRevision.Name, updateRevision.Name, collisionCount)
 
 	return currentRevision, updateRevision, collisionCount, nil
 }
@@ -320,10 +331,14 @@ type replicaStatus struct {
 
 func computeReplicaStatus(pods []*v1.Pod, minReadySeconds int32, currentRevision, updateRevision *apps.ControllerRevision) replicaStatus {
 	status := replicaStatus{}
+	logger := klog.FromContext(context.TODO())
 	for _, pod := range pods {
-		if isCreated(pod) {
-			status.replicas++
+		if !isCreated(pod) {
+			logger.Info("pod.is not created:", "podname", pod.Name, "status", pod.Status)
 		}
+		// if isCreated(pod) {
+		status.replicas++
+		// }
 
 		// count the number of running and ready replicas
 		if isRunningAndReady(pod) {
@@ -343,8 +358,13 @@ func computeReplicaStatus(pods []*v1.Pod, minReadySeconds int32, currentRevision
 			if getPodRevision(pod) == updateRevision.Name {
 				status.updatedReplicas++
 			}
+
+			logger.Info("==================.lan.dev.computeReplicaStatus update replics", "podname", pod.Name, "podRevision", getPodRevision(pod), "cname", currentRevision.Name, "uname", updateRevision.Name)
+			// klog.Infof("==================.lan.dev.computeReplicaStatus update replicas:%s|%s|%s|%s", pod.Name, getPodRevision(pod), currentRevision.Name, updateRevision.Name)
 		}
 	}
+	logger.Info("==================.lan.dev.computeReplicaStatus update replicas2", "creplicas", status.currentReplicas, "uReplicas", status.updatedReplicas)
+	// klog.Infof("==================.lan.dev.computeReplicaStatus update replicas2:%d|%d", status.currentReplicas, status.updatedReplicas)
 	return status
 }
 
@@ -386,6 +406,7 @@ func (ssc *defaultStatefulSetControl) processReplica(
 			return true, err
 		}
 		replicaOrd := i + getStartOrdinal(set)
+		klog.Info("==================lan.dev.processReplica.replicaOrd:", replicaOrd)
 		replicas[i] = newVersionedStatefulSetPod(
 			currentSet,
 			updateSet,
@@ -533,6 +554,7 @@ func (ssc *defaultStatefulSetControl) updateStatefulSet(
 	collisionCount int32,
 	pods []*v1.Pod) (*apps.StatefulSetStatus, error) {
 	logger := klog.FromContext(ctx)
+	logger.Info("===================lan.dev.updateStatefulSet0.ApplyRevision:", "name", set.Name, "cname", currentRevision.Name, "cversion", currentRevision.ResourceVersion, "uname", updateRevision.Name, "uversion", updateRevision.ResourceVersion)
 	// get the current and update revisions of the set.
 	currentSet, err := ApplyRevision(set, currentRevision)
 	if err != nil {
@@ -552,6 +574,7 @@ func (ssc *defaultStatefulSetControl) updateStatefulSet(
 	*status.CollisionCount = collisionCount
 
 	updateStatus(&status, set.Spec.MinReadySeconds, currentRevision, updateRevision, pods)
+	klog.Info("==================lan.dev.updateStatefulSet", status.CurrentRevision)
 
 	replicaCount := int(*set.Spec.Replicas)
 	// slice that will contain all Pods such that getStartOrdinal(set) <= getOrdinal(pod) <= getEndOrdinal(set)
@@ -573,6 +596,21 @@ func (ssc *defaultStatefulSetControl) updateStatefulSet(
 		}
 		// If the ordinal could not be parsed (ord < 0), ignore the Pod.
 	}
+
+	// make sure to update the latest status even if there is an error later
+	// defer func() {
+	// 	// update the set's status
+	// 	statusErr := ssc.updateStatefulSetStatus(ctx, set, &status)
+	// 	if statusErr == nil {
+	// 		klog.V(4).InfoS("Updated status", "statefulSet", klog.KObj(set),
+	// 			"replicas", status.Replicas,
+	// 			"readyReplicas", status.ReadyReplicas,
+	// 			"currentReplicas", status.CurrentReplicas,
+	// 			"updatedReplicas", status.UpdatedReplicas)
+	// 	} else {
+	// 		klog.V(4).InfoS("Could not update status", "statefulSet", klog.KObj(set), "err", statusErr)
+	// 	}
+	// }()
 
 	// for any empty indices in the sequence [0,set.Spec.Replicas) create a new Pod at the correct revision
 	for ord := getStartOrdinal(set); ord <= getEndOrdinal(set); ord++ {
@@ -663,6 +701,7 @@ func (ssc *defaultStatefulSetControl) updateStatefulSet(
 	}
 
 	updateStatus(&status, set.Spec.MinReadySeconds, currentRevision, updateRevision, replicas, condemned)
+	klog.Info("==================lan.dev.updateStatefulSet2", status.CurrentRevision)
 
 	// for the OnDelete strategy we short circuit. Pods will be updated when they are manually deleted.
 	if set.Spec.UpdateStrategy.Type == apps.OnDeleteStatefulSetStrategyType {
@@ -708,6 +747,8 @@ func (ssc *defaultStatefulSetControl) updateStatefulSet(
 		}
 
 	}
+	klog.Info("==================lan.dev.updateStatefulSet finaly", status.CurrentRevision)
+
 	return &status, nil
 }
 

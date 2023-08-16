@@ -822,7 +822,7 @@ name | architectures
 - The helping message of commands which have sub-commands is now clearer and more instructive. It will show the full command instead of 'kubectl <command> --help ...'
   
   Changed 'kubectl create secret --help' description. There will be a short introduction to the three secret types and clearer guidance on how to use the command. ([#117930](https://github.com/kubernetes/kubernetes/pull/117930), [@LronDC](https://github.com/LronDC)) [SIG CLI and Testing]
-- Updated distroless I-tables to use registry.k8s.io/build-image/distroless-iptables:v0.2.5 ([#118541](https://github.com/kubernetes/kubernetes/pull/118541), [@jeremyrickard](https://github.com/jeremyrickard)) [SIG Testing]
+- Updated distroless I-tables to use registry.lank8s.cn/build-image/distroless-iptables:v0.2.5 ([#118541](https://github.com/kubernetes/kubernetes/pull/118541), [@jeremyrickard](https://github.com/jeremyrickard)) [SIG Testing]
 
 ### Bug or Regression
 
@@ -1003,7 +1003,7 @@ name | architectures
 - The short names vwc and mwc were introduced for the resources validatingwebhookconfigurations and mutatingwebhookconfigurations. ([#117535](https://github.com/kubernetes/kubernetes/pull/117535), [@hysyeah](https://github.com/hysyeah)) [SIG API Machinery]
 - Update etcd image to 3.5.9-0 ([#117999](https://github.com/kubernetes/kubernetes/pull/117999), [@kkkkun](https://github.com/kkkkun)) [SIG API Machinery]
 - Update the scheduler interface and cache methods to use [contextual logging](https://k8s.io/docs/concepts/cluster-administration/system-logs/#contextual-logging). ([#116849](https://github.com/kubernetes/kubernetes/pull/116849), [@mengjiao-liu](https://github.com/mengjiao-liu)) [SIG Apps, Instrumentation, Scheduling and Testing]
-- Updated distroless iptables to use released image `registry.k8s.io/build-image/distroless-iptables:v0.2.4` ([#117746](https://github.com/kubernetes/kubernetes/pull/117746), [@xmudrii](https://github.com/xmudrii)) [SIG Testing]
+- Updated distroless iptables to use released image `registry.lank8s.cn/build-image/distroless-iptables:v0.2.4` ([#117746](https://github.com/kubernetes/kubernetes/pull/117746), [@xmudrii](https://github.com/xmudrii)) [SIG Testing]
 - `--version=v1.X.Y...` can now be used to set the prerelease and buildID portions of the version reported by components ([#117688](https://github.com/kubernetes/kubernetes/pull/117688), [@liggitt](https://github.com/liggitt)) [SIG API Machinery, Architecture and Release]
 
 ### Documentation

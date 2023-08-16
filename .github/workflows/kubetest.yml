@@ -1,0 +1,70 @@
+name: kubetest
+#https://github.com/kubernetes/community/blob/master/contributors/devel/sig-testing/e2e-tests.md
+
+on:
+  push:
+    # path-ignore:
+    #   - '**/*.md'
+    # branches: [ build_k8s ]
+    
+
+jobs:
+
+  ci:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20.6
+
+      - uses: oras-project/setup-oras@v1
+        with:
+          version: 1.0.0
+
+      - name: install kubetest
+        run: |
+          #git clone https://github.com/kubernetes/test-infra.git
+          #cd test-infra
+          #go install k8s.io/test-infra/kubetest
+          #cd .. 
+          #rm -rf test-infra
+          oras pull ghcr.io/liangyuanpeng/files:kubetest
+          chmod +x kubetest
+          mv kubetest /usr/local/bin/
+          pwd
+
+      - name: run
+        run: |
+          cd .. 
+          docker rmi `docker images -aq`
+          df -h
+          mkdir -p /home/runner/go/src/k8s.io
+          mv kubernetes /home/runner/go/src/k8s.io/
+          chmod -R 777 /home/runner/go/src/k8s.io/kubernetes
+          cd /home/runner/go/src/k8s.io/kubernetes
+          #kubetest --build --up --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
+          #kubetest  --test --test_args="--ginkgo.focus=\[StatefulSet\]" --provider=local
+          #kubetest --build --up --test --test_args="--ginkgo.focus=\[sig-apps\]StatefulSet" --down
+          cd test/e2e 
+          cat << EOF >> config.yaml
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          networking:
+            apiServerPort: 6443
+          nodes:
+          - role: control-plane
+            image: ghcr.io/liangyuanpeng/kindest/node:v1.29.0-alpha.0-84-g97d26bcdc1e
+          EOF
+          kind create cluster --config config.yaml
+          oras pull ghcr.io/liangyuanpeng/files:ginkgo
+          chmod +x ginkgo
+          mv ginkgo /usr/local/bin/ginkgo
+          ginkgo --focus="\[sig-apps\]StatefulSet"
+          cd ../../../
+          mv kubernetes /home/runner/

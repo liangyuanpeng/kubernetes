@@ -57,7 +57,7 @@ func BenchmarkReplaceRegistryInImageURL(b *testing.B) {
 			in:  "registry.k8s.io/e2e-test-images/test:latest",
 			out: "test.io/promoter/test:latest",
 		}, {
-			in:  "registry.k8s.io/build-image/test:latest",
+			in:  "registry.lank8s.cn/build-image/test:latest",
 			out: "test.io/build/test:latest",
 		}, {
 			in:  "gcr.io/authenticated-image-pulling/test:latest",
@@ -118,7 +118,7 @@ func TestReplaceRegistryInImageURL(t *testing.T) {
 			in:  "registry.k8s.io/e2e-test-images/test:latest",
 			out: "test.io/promoter/test:latest",
 		}, {
-			in:  "registry.k8s.io/build-image/test:latest",
+			in:  "registry.lank8s.cn/build-image/test:latest",
 			out: "test.io/build/test:latest",
 		}, {
 			in:  "gcr.io/authenticated-image-pulling/test:latest",

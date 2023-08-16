@@ -1,0 +1,29 @@
+name: kubetest2
+#https://github.com/kubernetes-sigs/kubetest2#external-implementations
+
+on: 
+  push:
+    branches: [ kubetest2 ]
+
+jobs:
+
+  ci:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: install Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20.6
+
+      - name: install kubetest2
+        run: |
+          go install sigs.k8s.io/kubetest2/...@latest
+
+      - name: run
+        run: |
+          kubetest2 kind -v 2 --build  --up --down --focus-regex='\[StatefulSet\]'

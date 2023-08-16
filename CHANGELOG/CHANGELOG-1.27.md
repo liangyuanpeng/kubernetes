@@ -973,8 +973,8 @@ The cause PR is [reverted](https://github.com/kubernetes/kubernetes/pull/117194)
   CSI driver release that has with GA support for Windows, XFS, and raw block access. ([#116342](https://github.com/kubernetes/kubernetes/pull/116342), [@msau42](https://github.com/msau42)) [SIG Storage]
 - Updated `cAdvisor` to `v0.47.0` ([#114883](https://github.com/kubernetes/kubernetes/pull/114883), [@bobbypage](https://github.com/bobbypage))
 - Updated `kube-apiserver` SLO/SLI latency metrics to exclude priority & fairness queue wait times ([#116420](https://github.com/kubernetes/kubernetes/pull/116420), [@andrewsykim](https://github.com/andrewsykim))
-- Updated distroless iptables to use released image `registry.k8s.io/build-image/distroless-iptables:v0.2.2`
-  - Updated setcap to use released image `registry.k8s.io/build-image/setcap:bullseye-v1.4.2` ([#116509](https://github.com/kubernetes/kubernetes/pull/116509), [@cpanato](https://github.com/cpanato)) [SIG Testing]
+- Updated distroless iptables to use released image `registry.lank8s.cn/build-image/distroless-iptables:v0.2.2`
+  - Updated setcap to use released image `registry.lank8s.cn/build-image/setcap:bullseye-v1.4.2` ([#116509](https://github.com/kubernetes/kubernetes/pull/116509), [@cpanato](https://github.com/cpanato)) [SIG Testing]
 - Updated distroless iptables to use released image `registry.k8s.io/distroless-iptables:v0.2.1` ([#115905](https://github.com/kubernetes/kubernetes/pull/115905), [@cpanato](https://github.com/cpanato)) [SIG Testing]
 - Upgrades functionality of `kubectl kustomize` as described at
   https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv5.0.0 and https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv5.0.1. 
@@ -1003,7 +1003,7 @@ The cause PR is [reverted](https://github.com/kubernetes/kubernetes/pull/117194)
 - `kubeadm`: now shows a warning message when detecting that the sandbox image of the container runtime is inconsistent with that used by kubeadm ([#115610](https://github.com/kubernetes/kubernetes/pull/115610), [@SataQiu](https://github.com/SataQiu))
 - `kubectl` now uses `HorizontalPodAutoscaler` `v2` by default. ([#114886](https://github.com/kubernetes/kubernetes/pull/114886), [@a7i](https://github.com/a7i))
 - Kubernetes is now built with Go 1.20.3 ([#117125](https://github.com/kubernetes/kubernetes/pull/117125), [@xmudrii](https://github.com/xmudrii)) [SIG Release and Testing]
-- Updated distroless iptables to use released image `registry.k8s.io/build-image/distroless-iptables:v0.2.3` ([#117126](https://github.com/kubernetes/kubernetes/pull/117126), [@xmudrii](https://github.com/xmudrii)) [SIG Testing]
+- Updated distroless iptables to use released image `registry.lank8s.cn/build-image/distroless-iptables:v0.2.3` ([#117126](https://github.com/kubernetes/kubernetes/pull/117126), [@xmudrii](https://github.com/xmudrii)) [SIG Testing]
 
 ### Documentation
 
@@ -1336,7 +1336,7 @@ name | architectures
 ### Feature
 
 - Kubernetes is now built with Go 1.20.3 ([#117125](https://github.com/kubernetes/kubernetes/pull/117125), [@xmudrii](https://github.com/xmudrii)) [SIG Release and Testing]
-- Updated distroless iptables to use released image `registry.k8s.io/build-image/distroless-iptables:v0.2.3` ([#117126](https://github.com/kubernetes/kubernetes/pull/117126), [@xmudrii](https://github.com/xmudrii)) [SIG Testing]
+- Updated distroless iptables to use released image `registry.lank8s.cn/build-image/distroless-iptables:v0.2.3` ([#117126](https://github.com/kubernetes/kubernetes/pull/117126), [@xmudrii](https://github.com/xmudrii)) [SIG Testing]
 
 ### Bug or Regression
 
@@ -1680,8 +1680,8 @@ name | architectures
   The change allow users to continue using the in-tree vSphere driver,pending a vSphere
   CSI driver release that has with GA support for Windows, XFS, and raw block access. ([#116342](https://github.com/kubernetes/kubernetes/pull/116342), [@msau42](https://github.com/msau42)) [SIG Storage]
 - Update kube-apiserver SLO/SLI latency metrics to exclude priority & fairness queue wait times ([#116420](https://github.com/kubernetes/kubernetes/pull/116420), [@andrewsykim](https://github.com/andrewsykim)) [SIG API Machinery]
-- Updated distroless iptables to use released image `registry.k8s.io/build-image/distroless-iptables:v0.2.2`
-  - Updated setcap to use released image `registry.k8s.io/build-image/setcap:bullseye-v1.4.2` ([#116509](https://github.com/kubernetes/kubernetes/pull/116509), [@cpanato](https://github.com/cpanato)) [SIG Testing]
+- Updated distroless iptables to use released image `registry.lank8s.cn/build-image/distroless-iptables:v0.2.2`
+  - Updated setcap to use released image `registry.lank8s.cn/build-image/setcap:bullseye-v1.4.2` ([#116509](https://github.com/kubernetes/kubernetes/pull/116509), [@cpanato](https://github.com/cpanato)) [SIG Testing]
 - Upgrades functionality of `kubectl kustomize` as described at
   https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv5.0.0 and https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv5.0.1. 
   

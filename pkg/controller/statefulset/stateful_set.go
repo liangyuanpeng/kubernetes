@@ -334,6 +334,7 @@ func (ssc *StatefulSetController) canAdoptFunc(ctx context.Context, set *apps.St
 
 // adoptOrphanRevisions adopts any orphaned ControllerRevisions matched by set's Selector.
 func (ssc *StatefulSetController) adoptOrphanRevisions(ctx context.Context, set *apps.StatefulSet) error {
+	klog.Infof("==================lan.dev.adoptOrphanRevisions1:%s", set.ResourceVersion)
 	revisions, err := ssc.control.ListRevisions(set)
 	if err != nil {
 		return err
@@ -351,6 +352,7 @@ func (ssc *StatefulSetController) adoptOrphanRevisions(ctx context.Context, set 
 		}
 		return ssc.control.AdoptOrphanRevisions(set, orphanRevisions)
 	}
+	klog.Infof("==================lan.dev.adoptOrphanRevisions2:%s|%s", set.ResourceVersion, set.Status.CurrentRevision)
 	return nil
 }
 
@@ -445,9 +447,6 @@ func (ssc *StatefulSetController) worker(ctx context.Context) {
 func (ssc *StatefulSetController) sync(ctx context.Context, key string) error {
 	startTime := time.Now()
 	logger := klog.FromContext(ctx)
-	defer func() {
-		logger.V(4).Info("Finished syncing statefulset", "key", key, "time", time.Since(startTime))
-	}()
 
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
@@ -462,6 +461,12 @@ func (ssc *StatefulSetController) sync(ctx context.Context, key string) error {
 		utilruntime.HandleError(fmt.Errorf("unable to retrieve StatefulSet %v from store: %v", key, err))
 		return err
 	}
+	defer func() {
+		// logger.V(4).Info("Finished syncing statefulset", "key", key, "time", time.Since(startTime))
+		logger.Info("Finished syncing statefulset", "set", set.Status.CurrentRevision, "key", key, "time", time.Since(startTime))
+	}()
+	logger.Info("===================lan.dev.sync.set", "setCRevision", set.Status.CurrentRevision, "rversion", set.ResourceVersion, "cversion", set.Status.CurrentRevision)
+	// klog.Infof("===================lan.dev.sync.set:%s|%s", set.ResourceVersion, set.Status.CurrentRevision)
 
 	selector, err := metav1.LabelSelectorAsSelector(set.Spec.Selector)
 	if err != nil {

@@ -114,6 +114,7 @@ func (om *realStatefulPodControlObjectManager) UpdateClaim(claim *v1.PersistentV
 
 func (spc *StatefulPodControl) CreateStatefulPod(ctx context.Context, set *apps.StatefulSet, pod *v1.Pod) error {
 	// Create the Pod's PVCs prior to creating the Pod
+	klog.Infof("====================lan.dev.CreateStatefulPod:%s|%s", pod.Name, pod.Spec.Containers[0].Image)
 	if err := spc.createPersistentVolumeClaims(set, pod); err != nil {
 		spc.recordPodEvent("create", set, pod, err)
 		return err
@@ -132,6 +133,7 @@ func (spc *StatefulPodControl) CreateStatefulPod(ctx context.Context, set *apps.
 		}
 	}
 	spc.recordPodEvent("create", set, pod, err)
+	klog.Infof("==================lan.dev.CreateStatefulPod2:%s|%s|%s|%s", set.Status.CurrentRevision, pod.Name, pod.Spec.Containers[0].Image, pod.Labels)
 	return err
 }
 

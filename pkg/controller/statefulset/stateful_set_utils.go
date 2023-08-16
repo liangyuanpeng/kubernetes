@@ -17,6 +17,7 @@ limitations under the License.
 package statefulset
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -94,6 +95,7 @@ func getStartOrdinal(set *apps.StatefulSet) int {
 			return int(set.Spec.Ordinals.Start)
 		}
 	}
+	// klog.Info("=====================lan.dev.getStartOrdinal:0")
 	return 0
 }
 
@@ -472,13 +474,18 @@ func newStatefulSetPod(set *apps.StatefulSet, ordinal int) *v1.Pod {
 // the current revision. updateRevision is the name of the update revision. ordinal is the ordinal of the Pod. If the
 // returned error is nil, the returned Pod is valid.
 func newVersionedStatefulSetPod(currentSet, updateSet *apps.StatefulSet, currentRevision, updateRevision string, ordinal int) *v1.Pod {
+	check2 := (currentSet.Spec.UpdateStrategy.RollingUpdate == nil && ordinal < (getStartOrdinal(currentSet)+int(currentSet.Status.CurrentReplicas)))
+	check3 := (currentSet.Spec.UpdateStrategy.RollingUpdate != nil && ordinal < (getStartOrdinal(currentSet)+int(*currentSet.Spec.UpdateStrategy.RollingUpdate.Partition)))
+	klog.Info("==============lan.dev.newVersionedStatefulSetPod:", currentSet.Name, check2, check3, currentSet.Spec.Template.Spec.Containers[0].Image, currentSet.Spec.UpdateStrategy.Type)
+	klog.Infof("==============lan.dev.newVersionedStatefulSetPod:%s|%s|%s|%s", currentRevision, currentSet.Spec.Template.Spec.Containers[0].Image, updateRevision, updateSet.Spec.Template.Spec.Containers[0].Image)
 	if currentSet.Spec.UpdateStrategy.Type == apps.RollingUpdateStatefulSetStrategyType &&
-		(currentSet.Spec.UpdateStrategy.RollingUpdate == nil && ordinal < (getStartOrdinal(currentSet)+int(currentSet.Status.CurrentReplicas))) ||
-		(currentSet.Spec.UpdateStrategy.RollingUpdate != nil && ordinal < (getStartOrdinal(currentSet)+int(*currentSet.Spec.UpdateStrategy.RollingUpdate.Partition))) {
+		(check2 || check3) {
+		klog.Info("==============lan.dev.newVersionedStatefulSetPod.use currentSet")
 		pod := newStatefulSetPod(currentSet, ordinal)
 		setPodRevision(pod, currentRevision)
 		return pod
 	}
+	klog.Info("==============lan.dev.newVersionedStatefulSetPod.use updateSet")
 	pod := newStatefulSetPod(updateSet, ordinal)
 	setPodRevision(pod, updateRevision)
 	return pod
@@ -584,6 +591,8 @@ func completeRollingUpdate(set *apps.StatefulSet, status *apps.StatefulSetStatus
 	if set.Spec.UpdateStrategy.Type == apps.RollingUpdateStatefulSetStrategyType &&
 		status.UpdatedReplicas == status.Replicas &&
 		status.ReadyReplicas == status.Replicas {
+		logger := klog.FromContext(context.TODO())
+		logger.Info("=====================lan.dev.completeRollingUpdate:", "cRevision", status.CurrentRevision, "uRevision", status.UpdateRevision, "ureplicas", set.Status.UpdatedReplicas, "statusReplicas", status.Replicas)
 		status.CurrentReplicas = status.UpdatedReplicas
 		status.CurrentRevision = status.UpdateRevision
 	}
