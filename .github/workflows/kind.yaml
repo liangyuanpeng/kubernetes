@@ -1,4 +1,4 @@
-name: build
+name: build_kind
 
 on: 
   push:
