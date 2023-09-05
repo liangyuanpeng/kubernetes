@@ -481,7 +481,7 @@ var _ = SIGDescribe("StatefulSet", func() {
 				}
 			})
 			framework.ExpectNoError(err)
-			ss, pods = waitForPartitionedRollingUpdate(ctx, c, ss)
+			ss, _ = waitForPartitionedRollingUpdate(ctx, c, ss)
 			//delete all of the old pod
 			deleteStatefulPodAtIndex(ctx, c, 0, ss)
 			e2estatefulset.WaitForRunningAndReady(ctx, c, 3, ss)
