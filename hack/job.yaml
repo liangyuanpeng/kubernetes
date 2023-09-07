@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  # generateName: kubernetes-
+  name: k8s
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 0
+  template:
+    metadata:
+      name: kubernetes
+      labels:
+        app: kubernetes
+    spec:
+      volumes:
+        - name: tokenauth
+          hostPath:
+            path: /etc/kubernetes/pki/token-auth.csv
+      containers:
+        - image: ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
+          name: tools
+#          imagePullPolicy: IfNotPresent
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          command:
+            - /bin/bash
+            - -c
+            - |
+              ls
+              pwd
+              time git clone https://github.com/liangyuanpeng/kubernetes.git
+              #pwd
+              #/
+              #curl https://sdk.cloud.google.com | bash
+              export USER=lan
+              oras pull ghcr.io/liangyuanpeng/files:ginkgo
+              chmod +x ginkgo
+              mv ginkgo /usr/local/bin/ginkgo
+              oras pull ghcr.io/liangyuanpeng/files:kubetest
+              chmod +x kubetest
+              mv kubetest /usr/local/bin/
+              export GOROOT=/usr/share/go
+              mkdir -p /usr/share/gopath
+              export GOPATH=/usr/share/gopath
+              export PATH=$PATH:$GOROOT/bin
+              go version
+              mkdir -p /usr/share/go/src/k8s.io
+              mv kubernetes /usr/share/go/src/k8s.io/
+              cd /usr/share/go/src/k8s.io/kubernetes
+              git checkout -b build origin/fix_sts_roll_dev
+              cd test/e2e
+              git branch
+              echo "begin run e2e......"
+              #kubetest --test --test_args="--ginkgo.focus=\[StatefulSetBasic\]"
+              ginkgo --focus="should perform canary updates and phased rolling updates" -v --fail-fast
+      restartPolicy: Never

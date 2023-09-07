@@ -20,7 +20,6 @@
 name: k8s_ci
 on:
   push:
-    branches: [ k8s_ci ]
   workflow_dispatch:
     inputs:
       ref:
@@ -65,3 +64,5 @@ jobs:
           chmod +x kind-linux-amd64 &&  mv kind-linux-amd64 /usr/local/bin/kind
           kind create cluster
           kubectl get po -A
+          kubectl apply -f hack/job.yaml
+          kubectl logs k8s -f
