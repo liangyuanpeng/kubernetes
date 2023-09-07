@@ -133,200 +133,8 @@ var _ = SIGDescribe("StatefulSet", func() {
 			e2estatefulset.DeleteAllStatefulSets(ctx, c, ns)
 		})
 
-		// This can't be Conformance yet because it depends on a default
-		// StorageClass and a dynamic provisioner.
-		ginkgo.It("should provide basic identity", func(ctx context.Context) {
-			ginkgo.By("Creating statefulset " + ssName + " in namespace " + ns)
-			e2epv.SkipIfNoDefaultStorageClass(ctx, c)
-			*(ss.Spec.Replicas) = 3
-			e2estatefulset.PauseNewPods(ss)
+		testaa := func(partition int32, ctx context.Context) {
 
-			_, err := c.AppsV1().StatefulSets(ns).Create(ctx, ss, metav1.CreateOptions{})
-			framework.ExpectNoError(err)
-
-			ginkgo.By("Saturating stateful set " + ss.Name)
-			e2estatefulset.Saturate(ctx, c, ss)
-
-			ginkgo.By("Verifying statefulset mounted data directory is usable")
-			framework.ExpectNoError(e2estatefulset.CheckMount(ctx, c, ss, "/data"))
-
-			ginkgo.By("Verifying statefulset provides a stable hostname for each pod")
-			framework.ExpectNoError(e2estatefulset.CheckHostname(ctx, c, ss))
-
-			ginkgo.By("Verifying statefulset set proper service name")
-			framework.ExpectNoError(e2estatefulset.CheckServiceName(ss, headlessSvcName))
-
-			cmd := "echo $(hostname) | dd of=/data/hostname conv=fsync"
-			ginkgo.By("Running " + cmd + " in all stateful pods")
-			framework.ExpectNoError(e2estatefulset.ExecInStatefulPods(ctx, c, ss, cmd))
-
-			cmd = "ln -s /data/hostname /data/hostname-symlink"
-			ginkgo.By("Running " + cmd + " in all stateful pods")
-			framework.ExpectNoError(e2estatefulset.ExecInStatefulPods(ctx, c, ss, cmd))
-
-			ginkgo.By("Restarting statefulset " + ss.Name)
-			e2estatefulset.Restart(ctx, c, ss)
-			e2estatefulset.WaitForRunningAndReady(ctx, c, *ss.Spec.Replicas, ss)
-
-			ginkgo.By("Verifying statefulset mounted data directory is usable")
-			framework.ExpectNoError(e2estatefulset.CheckMount(ctx, c, ss, "/data"))
-
-			cmd = "if [ \"$(cat /data/hostname)\" = \"$(hostname)\" ]; then exit 0; else exit 1; fi"
-			ginkgo.By("Running " + cmd + " in all stateful pods")
-			framework.ExpectNoError(e2estatefulset.ExecInStatefulPods(ctx, c, ss, cmd))
-
-			cmd = "if [ \"$(cat /data/hostname-symlink)\" = \"$(hostname)\" ]; then exit 0; else exit 1; fi"
-			ginkgo.By("Running " + cmd + " in all stateful pods")
-			framework.ExpectNoError(e2estatefulset.ExecInStatefulPods(ctx, c, ss, cmd))
-		})
-
-		// This can't be Conformance yet because it depends on a default
-		// StorageClass and a dynamic provisioner.
-		ginkgo.It("should adopt matching orphans and release non-matching pods", func(ctx context.Context) {
-			ginkgo.By("Creating statefulset " + ssName + " in namespace " + ns)
-			e2epv.SkipIfNoDefaultStorageClass(ctx, c)
-			*(ss.Spec.Replicas) = 1
-			e2estatefulset.PauseNewPods(ss)
-
-			// Replace ss with the one returned from Create() so it has the UID.
-			// Save Kind since it won't be populated in the returned ss.
-			kind := ss.Kind
-			ss, err := c.AppsV1().StatefulSets(ns).Create(ctx, ss, metav1.CreateOptions{})
-			framework.ExpectNoError(err)
-			ss.Kind = kind
-
-			ginkgo.By("Saturating stateful set " + ss.Name)
-			e2estatefulset.Saturate(ctx, c, ss)
-			pods := e2estatefulset.GetPodList(ctx, c, ss)
-			gomega.Expect(pods.Items).To(gomega.HaveLen(int(*ss.Spec.Replicas)))
-
-			ginkgo.By("Checking that stateful set pods are created with ControllerRef")
-			pod := pods.Items[0]
-			controllerRef := metav1.GetControllerOf(&pod)
-			gomega.Expect(controllerRef).ToNot(gomega.BeNil())
-			framework.ExpectEqual(controllerRef.Kind, ss.Kind)
-			framework.ExpectEqual(controllerRef.Name, ss.Name)
-			framework.ExpectEqual(controllerRef.UID, ss.UID)
-
-			ginkgo.By("Orphaning one of the stateful set's pods")
-			e2epod.NewPodClient(f).Update(ctx, pod.Name, func(pod *v1.Pod) {
-				pod.OwnerReferences = nil
-			})
-
-			ginkgo.By("Checking that the stateful set readopts the pod")
-			gomega.Expect(e2epod.WaitForPodCondition(ctx, c, pod.Namespace, pod.Name, "adopted", statefulSetTimeout,
-				func(pod *v1.Pod) (bool, error) {
-					controllerRef := metav1.GetControllerOf(pod)
-					if controllerRef == nil {
-						return false, nil
-					}
-					if controllerRef.Kind != ss.Kind || controllerRef.Name != ss.Name || controllerRef.UID != ss.UID {
-						return false, fmt.Errorf("pod has wrong controllerRef: %v", controllerRef)
-					}
-					return true, nil
-				},
-			)).To(gomega.Succeed(), "wait for pod %q to be readopted", pod.Name)
-
-			ginkgo.By("Removing the labels from one of the stateful set's pods")
-			prevLabels := pod.Labels
-			e2epod.NewPodClient(f).Update(ctx, pod.Name, func(pod *v1.Pod) {
-				pod.Labels = nil
-			})
-
-			ginkgo.By("Checking that the stateful set releases the pod")
-			gomega.Expect(e2epod.WaitForPodCondition(ctx, c, pod.Namespace, pod.Name, "released", statefulSetTimeout,
-				func(pod *v1.Pod) (bool, error) {
-					controllerRef := metav1.GetControllerOf(pod)
-					if controllerRef != nil {
-						return false, nil
-					}
-					return true, nil
-				},
-			)).To(gomega.Succeed(), "wait for pod %q to be released", pod.Name)
-
-			// If we don't do this, the test leaks the Pod and PVC.
-			ginkgo.By("Readding labels to the stateful set's pod")
-			e2epod.NewPodClient(f).Update(ctx, pod.Name, func(pod *v1.Pod) {
-				pod.Labels = prevLabels
-			})
-
-			ginkgo.By("Checking that the stateful set readopts the pod")
-			gomega.Expect(e2epod.WaitForPodCondition(ctx, c, pod.Namespace, pod.Name, "adopted", statefulSetTimeout,
-				func(pod *v1.Pod) (bool, error) {
-					controllerRef := metav1.GetControllerOf(pod)
-					if controllerRef == nil {
-						return false, nil
-					}
-					if controllerRef.Kind != ss.Kind || controllerRef.Name != ss.Name || controllerRef.UID != ss.UID {
-						return false, fmt.Errorf("pod has wrong controllerRef: %v", controllerRef)
-					}
-					return true, nil
-				},
-			)).To(gomega.Succeed(), "wait for pod %q to be readopted", pod.Name)
-		})
-
-		// This can't be Conformance yet because it depends on a default
-		// StorageClass and a dynamic provisioner.
-		ginkgo.It("should not deadlock when a pod's predecessor fails", func(ctx context.Context) {
-			ginkgo.By("Creating statefulset " + ssName + " in namespace " + ns)
-			e2epv.SkipIfNoDefaultStorageClass(ctx, c)
-			*(ss.Spec.Replicas) = 2
-			e2estatefulset.PauseNewPods(ss)
-
-			_, err := c.AppsV1().StatefulSets(ns).Create(ctx, ss, metav1.CreateOptions{})
-			framework.ExpectNoError(err)
-
-			e2estatefulset.WaitForRunning(ctx, c, 1, 0, ss)
-
-			ginkgo.By("Resuming stateful pod at index 0.")
-			e2estatefulset.ResumeNextPod(ctx, c, ss)
-
-			ginkgo.By("Waiting for stateful pod at index 1 to enter running.")
-			e2estatefulset.WaitForRunning(ctx, c, 2, 1, ss)
-
-			// Now we have 1 healthy and 1 unhealthy stateful pod. Deleting the healthy stateful pod should *not*
-			// create a new stateful pod till the remaining stateful pod becomes healthy, which won't happen till
-			// we set the healthy bit.
-
-			ginkgo.By("Deleting healthy stateful pod at index 0.")
-			deleteStatefulPodAtIndex(ctx, c, 0, ss)
-
-			ginkgo.By("Confirming stateful pod at index 0 is recreated.")
-			e2estatefulset.WaitForRunning(ctx, c, 2, 1, ss)
-
-			ginkgo.By("Resuming stateful pod at index 1.")
-			e2estatefulset.ResumeNextPod(ctx, c, ss)
-
-			ginkgo.By("Confirming all stateful pods in statefulset are created.")
-			e2estatefulset.WaitForRunningAndReady(ctx, c, *ss.Spec.Replicas, ss)
-		})
-
-		// This can't be Conformance yet because it depends on a default
-		// StorageClass and a dynamic provisioner.
-		ginkgo.It("should perform rolling updates and roll backs of template modifications with PVCs", func(ctx context.Context) {
-			ginkgo.By("Creating a new StatefulSet with PVCs")
-			e2epv.SkipIfNoDefaultStorageClass(ctx, c)
-			*(ss.Spec.Replicas) = 3
-			rollbackTest(ctx, c, ns, ss)
-		})
-
-		/*
-		   Release: v1.9
-		   Testname: StatefulSet, Rolling Update
-		   Description: StatefulSet MUST support the RollingUpdate strategy to automatically replace Pods one at a time when the Pod template changes. The StatefulSet's status MUST indicate the CurrentRevision and UpdateRevision. If the template is changed to match a prior revision, StatefulSet MUST detect this as a rollback instead of creating a new revision. This test does not depend on a preexisting default StorageClass or a dynamic provisioner.
-		*/
-		framework.ConformanceIt("should perform rolling updates and roll backs of template modifications", func(ctx context.Context) {
-			ginkgo.By("Creating a new StatefulSet")
-			ss := e2estatefulset.NewStatefulSet("ss2", ns, headlessSvcName, 3, nil, nil, labels)
-			rollbackTest(ctx, c, ns, ss)
-		})
-
-		/*
-		   Release: v1.9
-		   Testname: StatefulSet, Rolling Update with Partition
-		   Description: StatefulSet's RollingUpdate strategy MUST support the Partition parameter for canaries and phased rollouts. If a Pod is deleted while a rolling update is in progress, StatefulSet MUST restore the Pod without violating the Partition. This test does not depend on a preexisting default StorageClass or a dynamic provisioner.
-		*/
-		framework.ConformanceIt("should perform canary updates and phased rolling updates of template modifications", func(ctx context.Context) {
 			ginkgo.By("Creating a new StatefulSet")
 			ss := e2estatefulset.NewStatefulSet("ss2", ns, headlessSvcName, 3, nil, nil, labels)
 			setHTTPProbe(ss)
@@ -334,7 +142,7 @@ var _ = SIGDescribe("StatefulSet", func() {
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: func() *appsv1.RollingUpdateStatefulSetStrategy {
 					return &appsv1.RollingUpdateStatefulSetStrategy{
-						Partition: pointer.Int32(3),
+						Partition: pointer.Int32(partition),
 					}
 				}(),
 			}
@@ -560,6 +368,204 @@ var _ = SIGDescribe("StatefulSet", func() {
 				ss.Status.CurrentRevision,
 				updateRevision))
 
+		}
+
+		// This can't be Conformance yet because it depends on a default
+		// StorageClass and a dynamic provisioner.
+		ginkgo.It("should provide basic identity", func(ctx context.Context) {
+			ginkgo.By("Creating statefulset " + ssName + " in namespace " + ns)
+			e2epv.SkipIfNoDefaultStorageClass(ctx, c)
+			*(ss.Spec.Replicas) = 3
+			e2estatefulset.PauseNewPods(ss)
+
+			_, err := c.AppsV1().StatefulSets(ns).Create(ctx, ss, metav1.CreateOptions{})
+			framework.ExpectNoError(err)
+
+			ginkgo.By("Saturating stateful set " + ss.Name)
+			e2estatefulset.Saturate(ctx, c, ss)
+
+			ginkgo.By("Verifying statefulset mounted data directory is usable")
+			framework.ExpectNoError(e2estatefulset.CheckMount(ctx, c, ss, "/data"))
+
+			ginkgo.By("Verifying statefulset provides a stable hostname for each pod")
+			framework.ExpectNoError(e2estatefulset.CheckHostname(ctx, c, ss))
+
+			ginkgo.By("Verifying statefulset set proper service name")
+			framework.ExpectNoError(e2estatefulset.CheckServiceName(ss, headlessSvcName))
+
+			cmd := "echo $(hostname) | dd of=/data/hostname conv=fsync"
+			ginkgo.By("Running " + cmd + " in all stateful pods")
+			framework.ExpectNoError(e2estatefulset.ExecInStatefulPods(ctx, c, ss, cmd))
+
+			cmd = "ln -s /data/hostname /data/hostname-symlink"
+			ginkgo.By("Running " + cmd + " in all stateful pods")
+			framework.ExpectNoError(e2estatefulset.ExecInStatefulPods(ctx, c, ss, cmd))
+
+			ginkgo.By("Restarting statefulset " + ss.Name)
+			e2estatefulset.Restart(ctx, c, ss)
+			e2estatefulset.WaitForRunningAndReady(ctx, c, *ss.Spec.Replicas, ss)
+
+			ginkgo.By("Verifying statefulset mounted data directory is usable")
+			framework.ExpectNoError(e2estatefulset.CheckMount(ctx, c, ss, "/data"))
+
+			cmd = "if [ \"$(cat /data/hostname)\" = \"$(hostname)\" ]; then exit 0; else exit 1; fi"
+			ginkgo.By("Running " + cmd + " in all stateful pods")
+			framework.ExpectNoError(e2estatefulset.ExecInStatefulPods(ctx, c, ss, cmd))
+
+			cmd = "if [ \"$(cat /data/hostname-symlink)\" = \"$(hostname)\" ]; then exit 0; else exit 1; fi"
+			ginkgo.By("Running " + cmd + " in all stateful pods")
+			framework.ExpectNoError(e2estatefulset.ExecInStatefulPods(ctx, c, ss, cmd))
+		})
+
+		// This can't be Conformance yet because it depends on a default
+		// StorageClass and a dynamic provisioner.
+		ginkgo.It("should adopt matching orphans and release non-matching pods", func(ctx context.Context) {
+			ginkgo.By("Creating statefulset " + ssName + " in namespace " + ns)
+			e2epv.SkipIfNoDefaultStorageClass(ctx, c)
+			*(ss.Spec.Replicas) = 1
+			e2estatefulset.PauseNewPods(ss)
+
+			// Replace ss with the one returned from Create() so it has the UID.
+			// Save Kind since it won't be populated in the returned ss.
+			kind := ss.Kind
+			ss, err := c.AppsV1().StatefulSets(ns).Create(ctx, ss, metav1.CreateOptions{})
+			framework.ExpectNoError(err)
+			ss.Kind = kind
+
+			ginkgo.By("Saturating stateful set " + ss.Name)
+			e2estatefulset.Saturate(ctx, c, ss)
+			pods := e2estatefulset.GetPodList(ctx, c, ss)
+			gomega.Expect(pods.Items).To(gomega.HaveLen(int(*ss.Spec.Replicas)))
+
+			ginkgo.By("Checking that stateful set pods are created with ControllerRef")
+			pod := pods.Items[0]
+			controllerRef := metav1.GetControllerOf(&pod)
+			gomega.Expect(controllerRef).ToNot(gomega.BeNil())
+			framework.ExpectEqual(controllerRef.Kind, ss.Kind)
+			framework.ExpectEqual(controllerRef.Name, ss.Name)
+			framework.ExpectEqual(controllerRef.UID, ss.UID)
+
+			ginkgo.By("Orphaning one of the stateful set's pods")
+			e2epod.NewPodClient(f).Update(ctx, pod.Name, func(pod *v1.Pod) {
+				pod.OwnerReferences = nil
+			})
+
+			ginkgo.By("Checking that the stateful set readopts the pod")
+			gomega.Expect(e2epod.WaitForPodCondition(ctx, c, pod.Namespace, pod.Name, "adopted", statefulSetTimeout,
+				func(pod *v1.Pod) (bool, error) {
+					controllerRef := metav1.GetControllerOf(pod)
+					if controllerRef == nil {
+						return false, nil
+					}
+					if controllerRef.Kind != ss.Kind || controllerRef.Name != ss.Name || controllerRef.UID != ss.UID {
+						return false, fmt.Errorf("pod has wrong controllerRef: %v", controllerRef)
+					}
+					return true, nil
+				},
+			)).To(gomega.Succeed(), "wait for pod %q to be readopted", pod.Name)
+
+			ginkgo.By("Removing the labels from one of the stateful set's pods")
+			prevLabels := pod.Labels
+			e2epod.NewPodClient(f).Update(ctx, pod.Name, func(pod *v1.Pod) {
+				pod.Labels = nil
+			})
+
+			ginkgo.By("Checking that the stateful set releases the pod")
+			gomega.Expect(e2epod.WaitForPodCondition(ctx, c, pod.Namespace, pod.Name, "released", statefulSetTimeout,
+				func(pod *v1.Pod) (bool, error) {
+					controllerRef := metav1.GetControllerOf(pod)
+					if controllerRef != nil {
+						return false, nil
+					}
+					return true, nil
+				},
+			)).To(gomega.Succeed(), "wait for pod %q to be released", pod.Name)
+
+			// If we don't do this, the test leaks the Pod and PVC.
+			ginkgo.By("Readding labels to the stateful set's pod")
+			e2epod.NewPodClient(f).Update(ctx, pod.Name, func(pod *v1.Pod) {
+				pod.Labels = prevLabels
+			})
+
+			ginkgo.By("Checking that the stateful set readopts the pod")
+			gomega.Expect(e2epod.WaitForPodCondition(ctx, c, pod.Namespace, pod.Name, "adopted", statefulSetTimeout,
+				func(pod *v1.Pod) (bool, error) {
+					controllerRef := metav1.GetControllerOf(pod)
+					if controllerRef == nil {
+						return false, nil
+					}
+					if controllerRef.Kind != ss.Kind || controllerRef.Name != ss.Name || controllerRef.UID != ss.UID {
+						return false, fmt.Errorf("pod has wrong controllerRef: %v", controllerRef)
+					}
+					return true, nil
+				},
+			)).To(gomega.Succeed(), "wait for pod %q to be readopted", pod.Name)
+		})
+
+		// This can't be Conformance yet because it depends on a default
+		// StorageClass and a dynamic provisioner.
+		ginkgo.It("should not deadlock when a pod's predecessor fails", func(ctx context.Context) {
+			ginkgo.By("Creating statefulset " + ssName + " in namespace " + ns)
+			e2epv.SkipIfNoDefaultStorageClass(ctx, c)
+			*(ss.Spec.Replicas) = 2
+			e2estatefulset.PauseNewPods(ss)
+
+			_, err := c.AppsV1().StatefulSets(ns).Create(ctx, ss, metav1.CreateOptions{})
+			framework.ExpectNoError(err)
+
+			e2estatefulset.WaitForRunning(ctx, c, 1, 0, ss)
+
+			ginkgo.By("Resuming stateful pod at index 0.")
+			e2estatefulset.ResumeNextPod(ctx, c, ss)
+
+			ginkgo.By("Waiting for stateful pod at index 1 to enter running.")
+			e2estatefulset.WaitForRunning(ctx, c, 2, 1, ss)
+
+			// Now we have 1 healthy and 1 unhealthy stateful pod. Deleting the healthy stateful pod should *not*
+			// create a new stateful pod till the remaining stateful pod becomes healthy, which won't happen till
+			// we set the healthy bit.
+
+			ginkgo.By("Deleting healthy stateful pod at index 0.")
+			deleteStatefulPodAtIndex(ctx, c, 0, ss)
+
+			ginkgo.By("Confirming stateful pod at index 0 is recreated.")
+			e2estatefulset.WaitForRunning(ctx, c, 2, 1, ss)
+
+			ginkgo.By("Resuming stateful pod at index 1.")
+			e2estatefulset.ResumeNextPod(ctx, c, ss)
+
+			ginkgo.By("Confirming all stateful pods in statefulset are created.")
+			e2estatefulset.WaitForRunningAndReady(ctx, c, *ss.Spec.Replicas, ss)
+		})
+
+		// This can't be Conformance yet because it depends on a default
+		// StorageClass and a dynamic provisioner.
+		ginkgo.It("should perform rolling updates and roll backs of template modifications with PVCs", func(ctx context.Context) {
+			ginkgo.By("Creating a new StatefulSet with PVCs")
+			e2epv.SkipIfNoDefaultStorageClass(ctx, c)
+			*(ss.Spec.Replicas) = 3
+			rollbackTest(ctx, c, ns, ss)
+		})
+
+		/*
+		   Release: v1.9
+		   Testname: StatefulSet, Rolling Update
+		   Description: StatefulSet MUST support the RollingUpdate strategy to automatically replace Pods one at a time when the Pod template changes. The StatefulSet's status MUST indicate the CurrentRevision and UpdateRevision. If the template is changed to match a prior revision, StatefulSet MUST detect this as a rollback instead of creating a new revision. This test does not depend on a preexisting default StorageClass or a dynamic provisioner.
+		*/
+		framework.ConformanceIt("should perform rolling updates and roll backs of template modifications", func(ctx context.Context) {
+			ginkgo.By("Creating a new StatefulSet")
+			ss := e2estatefulset.NewStatefulSet("ss2", ns, headlessSvcName, 3, nil, nil, labels)
+			rollbackTest(ctx, c, ns, ss)
+		})
+
+		/*
+		   Release: v1.9
+		   Testname: StatefulSet, Rolling Update with Partition
+		   Description: StatefulSet's RollingUpdate strategy MUST support the Partition parameter for canaries and phased rollouts. If a Pod is deleted while a rolling update is in progress, StatefulSet MUST restore the Pod without violating the Partition. This test does not depend on a preexisting default StorageClass or a dynamic provisioner.
+		*/
+		framework.ConformanceIt("should perform canary updates and phased rolling updates of template modifications", func(ctx context.Context) {
+			testaa(2, ctx)
+			testaa(1, ctx)
 		})
 
 		// Do not mark this as Conformance.
