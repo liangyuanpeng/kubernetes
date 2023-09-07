@@ -38,10 +38,14 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
 
+      - name: pull
+        run: |
+          nohup docker pull kindest/node:v1.27.3 &
+
       - name: checkoutactions
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - uses: actions/setup-go@v2
         with:
@@ -65,5 +69,6 @@ jobs:
           kind create cluster
           kubectl get po -A
           kubectl apply -f hack/job.yaml
+          kubectl wait node --all --for condition=ready
           kubectl get po -A
           kubectl logs k8s -f
