@@ -565,6 +565,9 @@ var _ = SIGDescribe("StatefulSet", func() {
 		*/
 		framework.ConformanceIt("should perform canary updates and phased rolling updates of template modifications", func(ctx context.Context) {
 			testaa(2, ctx)
+		})
+
+		framework.ConformanceIt("should perform canary updates and phased rolling updates of template modifications2", func(ctx context.Context) {
 			testaa(1, ctx)
 		})
 
