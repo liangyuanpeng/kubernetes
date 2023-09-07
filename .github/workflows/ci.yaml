@@ -65,4 +65,5 @@ jobs:
           kind create cluster
           kubectl get po -A
           kubectl apply -f hack/job.yaml
+          kubectl get po -A
           kubectl logs k8s -f
