@@ -71,4 +71,5 @@ jobs:
           kubectl apply -f hack/job.yaml
           kubectl wait node --all --for condition=ready
           kubectl get po -A
-          kubectl logs k8s -f
+          jobpod=$(kubectl get pods --selector=app=kubernetes --output=jsonpath='{.items[*].metadata.name}')
+          kubectl logs $jobpod -f 
