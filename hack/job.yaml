@@ -30,7 +30,7 @@ spec:
             - |
               ls
               pwd
-              time git clone https://github.com/liangyuanpeng/kubernetes.git -b fix_sts_roll_dev
+              time git clone https://github.com/liangyuanpeng/kubernetes.git -b fix_sts_roll_dev --depth=1
               #pwd
               #/
               #curl https://sdk.cloud.google.com | bash
