@@ -20,6 +20,7 @@
 name: ci_with_kind
 on:
   push:
+    branches: [ bd-api ]
   workflow_dispatch:
     inputs:
       ref:
