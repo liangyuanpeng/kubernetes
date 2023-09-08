@@ -133,7 +133,7 @@ var _ = SIGDescribe("StatefulSet", func() {
 			e2estatefulset.DeleteAllStatefulSets(ctx, c, ns)
 		})
 
-		testaa := func(partition int32, ctx context.Context) {
+		canaryUpdatesWithPartition := func(partition int32, ctx context.Context) {
 
 			ginkgo.By("Creating a new StatefulSet")
 			ss := e2estatefulset.NewStatefulSet("ss2", ns, headlessSvcName, 3, nil, nil, labels)
@@ -564,11 +564,11 @@ var _ = SIGDescribe("StatefulSet", func() {
 		   Description: StatefulSet's RollingUpdate strategy MUST support the Partition parameter for canaries and phased rollouts. If a Pod is deleted while a rolling update is in progress, StatefulSet MUST restore the Pod without violating the Partition. This test does not depend on a preexisting default StorageClass or a dynamic provisioner.
 		*/
 		framework.ConformanceIt("should perform canary updates and phased rolling updates of template modifications", func(ctx context.Context) {
-			testaa(2, ctx)
+			canaryUpdatesWithPartition(2, ctx)
 		})
 
-		framework.ConformanceIt("should perform canary updates and phased rolling updates of template modifications2", func(ctx context.Context) {
-			testaa(1, ctx)
+		framework.ConformanceIt("should perform canary updates and phased rolling updates of template modifications with partiton 1", func(ctx context.Context) {
+			canaryUpdatesWithPartition(1, ctx)
 		})
 
 		// Do not mark this as Conformance.
