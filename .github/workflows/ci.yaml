@@ -71,6 +71,7 @@ jobs:
           kubectl get po -A
           docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
           kind load docker-image ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
+          kubectl create clusterrolebinding permissive-binding --clusterrole=cluster-admin --group=system:serviceaccounts
           kubectl apply -f hack/job.yaml
           kubectl wait node --all --for condition=ready
           kubectl get po -A 
