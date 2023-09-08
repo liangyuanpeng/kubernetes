@@ -17,7 +17,7 @@
 # under the License.
 #
 
-name: k8s_ci
+name: ci_with_kind
 on:
   push:
   workflow_dispatch:
@@ -33,8 +33,40 @@ on:
 
 jobs:
 
+  buildkind:
+    name: build
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: checkoutactions
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+
+      - name: clean
+        run: |
+          nohup docker rmi `docker images -aq` &
+          rm -rf /opt/hostedtoolcache/CodeQL
+          rm -rf /opt/hostedtoolcache/node
+          rm -rf /opt/hostedtoolcache/Python
+
+
+      - name: build kind
+        run: |
+          wget -q https://github.com/kubernetes-sigs/kind/releases/download/v0.20.0/kind-linux-amd64
+          chmod +x kind-linux-amd64 &&  mv kind-linux-amd64 /usr/local/bin/kind
+
+      - name: build
+        run: |
+          mkdir tmp && cd tmp
+          kind build node-image --image kind:ci --kube-root $PWD/../ 
+
   ci:
     name: ci
+    needs: buildkind
     runs-on: ubuntu-22.04
     steps:
 
@@ -62,7 +94,7 @@ jobs:
           rm -rf /opt/hostedtoolcache/node
           rm -rf /opt/hostedtoolcache/Python
 
-      - name: download kind
+      - name: build kind
         run: |
           wget -q https://github.com/kubernetes-sigs/kind/releases/download/v0.20.0/kind-linux-amd64
           chmod +x kind-linux-amd64 &&  mv kind-linux-amd64 /usr/local/bin/kind
