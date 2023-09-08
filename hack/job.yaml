@@ -30,7 +30,7 @@ spec:
             - |
               ls
               pwd
-              time git clone https://github.com/liangyuanpeng/kubernetes.git
+              time git clone https://github.com/liangyuanpeng/kubernetes.git -b fix_sts_roll_dev
               #pwd
               #/
               #curl https://sdk.cloud.google.com | bash
@@ -49,9 +49,7 @@ spec:
               mkdir -p /usr/share/go/src/k8s.io
               mv kubernetes /usr/share/go/src/k8s.io/
               cd /usr/share/go/src/k8s.io/kubernetes
-              git checkout -b build origin/fix_sts_roll_dev
               cd test/e2e
-              git branch
               echo "begin run e2e......"
               #kubetest --test --test_args="--ginkgo.focus=\[StatefulSetBasic\]"
               ginkgo --focus="should perform canary updates and phased rolling updates" -v --fail-fast
