@@ -79,3 +79,4 @@ jobs:
           kubectl wait pod --for=condition=Ready=true $jobpod
           kubectl get po 
           kubectl logs $jobpod -f 
+          kubectl get po 
