@@ -4,7 +4,7 @@ metadata:
   # generateName: kubernetes-
   name: k8s
 spec:
-  ttlSecondsAfterFinished: 600
+  # ttlSecondsAfterFinished: 600
   backoffLimit: 0
   template:
     metadata:

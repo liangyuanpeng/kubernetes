@@ -95,6 +95,9 @@ jobs:
           if [ "$job_status" = "" ]; then
             kubectl logs $jobpod -f 
           fi
+          
+      - name: check status
+        run: |
           job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
           kubectl get job
           kubectl get po 
