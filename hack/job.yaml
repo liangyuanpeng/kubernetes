@@ -16,9 +16,15 @@ spec:
         - name: tokenauth
           hostPath:
             path: /etc/kubernetes/pki/token-auth.csv
+        - name: sources
+          hostPath:
+            path: /etc/kubernetes/sources
       containers:
         - image: ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
           name: tools
+          volumeMounts:
+            - name: sources
+              mountPath: /etc/kubernetes/sources
 #          imagePullPolicy: IfNotPresent
           imagePullPolicy: IfNotPresent
           securityContext:

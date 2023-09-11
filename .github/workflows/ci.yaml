@@ -40,7 +40,9 @@ jobs:
 
       - name: pull
         run: |
-          nohup docker pull kindest/node:v1.27.3 &
+          ls
+          pwd
+          nohup docker pull kindest/node:v1.28.0 &
 
       - name: checkoutactions
         uses: actions/checkout@v3
@@ -68,7 +70,8 @@ jobs:
           chmod +x kind-linux-amd64 &&  mv kind-linux-amd64 /usr/local/bin/kind
           nohup docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1 &
           #TODO use the new code for kind 
-          kind create cluster --image ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-591-gabb74c7afa4
+          #ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-591-gabb74c7afa4
+          kind create cluster --image kindest/node:v1.28.0
           docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
           kind load docker-image ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
           kubectl create clusterrolebinding permissive-binding --clusterrole=cluster-admin --group=system:serviceaccounts
