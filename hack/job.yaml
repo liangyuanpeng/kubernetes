@@ -16,20 +16,25 @@ spec:
         - name: tokenauth
           hostPath:
             path: /etc/kubernetes/pki/token-auth.csv
-        - name: sources
+        - name: localsources
           hostPath:
             path: /etc/kubernetes/sources
+        - name: sources
+          emptyDir: {}
       initContainers:
         - name: init
           image: ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
           volumeMounts:
             - name: sources
               mountPath: /etc/kubernetes/sources
+            - name: localsources
+              mountPath: /etc/localsources
           command:
             - /bin/bash
             - -c
             - |
               ls  /etc/kubernetes/sources
+              ls  /etc/localsources
       containers:
         - image: ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
           name: tools
