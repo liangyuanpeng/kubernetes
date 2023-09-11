@@ -97,6 +97,7 @@ jobs:
           fi
           job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
           kubectl get job
+          kubectl get po 
           echo "job status is :"$job_status
           if [ "$job_status" = "Complete" ]; then
             exit 0
