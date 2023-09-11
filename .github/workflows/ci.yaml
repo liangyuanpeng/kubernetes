@@ -42,6 +42,7 @@ jobs:
         run: |
           ls -allh
           pwd
+          find / -name "ci.yaml"
           nohup docker pull kindest/node:v1.28.0 &
 
       - name: checkoutactions
