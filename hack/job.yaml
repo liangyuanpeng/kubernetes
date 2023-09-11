@@ -51,11 +51,9 @@ spec:
               cd /etc/kubernetes/sources
               #curl https://sdk.cloud.google.com | bash
               export USER=lan
-              oras pull ghcr.io/liangyuanpeng/files:ginkgo
-              chmod +x ginkgo
+              oras pull ghcr.io/liangyuanpeng/files:ginkgo && chmod +x ginkgo
               mv ginkgo /usr/local/bin/ginkgo
-              oras pull ghcr.io/liangyuanpeng/files:kubetest
-              chmod +x kubetest
+              oras pull ghcr.io/liangyuanpeng/files:kubetest && chmod +x kubetest
               mv kubetest /usr/local/bin/
               export GOROOT=/usr/share/go
               mkdir -p /usr/share/gopath
