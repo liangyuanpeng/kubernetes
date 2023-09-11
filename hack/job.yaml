@@ -16,9 +16,6 @@ spec:
         - name: tokenauth
           hostPath:
             path: /etc/kubernetes/pki/token-auth.csv
-        - name: localsources
-          hostPath:
-            path: /etc/kubernetes/sources
         - name: sources
           emptyDir: {}
       initContainers:
@@ -27,14 +24,13 @@ spec:
           volumeMounts:
             - name: sources
               mountPath: /etc/kubernetes/sources
-            - name: localsources
-              mountPath: /etc/localsources
           command:
             - /bin/bash
             - -c
             - |
               ls  /etc/kubernetes/sources
-              ls  /etc/localsources
+              cd /etc/kubernetes/sources
+              time git clone https://github.com/liangyuanpeng/kubernetes.git -b fix_sts_roll_dev --depth=1
       containers:
         - image: ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
           name: tools
@@ -52,9 +48,7 @@ spec:
             - |
               ls  /etc/kubernetes/sources
               pwd
-              time git clone https://github.com/liangyuanpeng/kubernetes.git -b fix_sts_roll_dev --depth=1
-              #pwd
-              #/
+              cd /etc/kubernetes/sources
               #curl https://sdk.cloud.google.com | bash
               export USER=lan
               oras pull ghcr.io/liangyuanpeng/files:ginkgo
