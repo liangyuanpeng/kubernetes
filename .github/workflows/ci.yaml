@@ -63,11 +63,14 @@ jobs:
           rm -rf /opt/hostedtoolcache/node
           rm -rf /opt/hostedtoolcache/Python
 
-      - name: create cluster with kind
+      - name: download kind
         run: |
+          nohup docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1 &
           wget -q https://github.com/kubernetes-sigs/kind/releases/download/v0.20.0/kind-linux-amd64
           chmod +x kind-linux-amd64 &&  mv kind-linux-amd64 /usr/local/bin/kind
-          nohup docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1 &
+
+      - name: create cluster with kind
+        run: |
           #TODO use the new code for kind 
           #ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-591-gabb74c7afa4
           kind create cluster --config hack/kind.yaml

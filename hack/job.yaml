@@ -19,6 +19,17 @@ spec:
         - name: sources
           hostPath:
             path: /etc/kubernetes/sources
+      initContainers:
+        - name: init
+          image: ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
+          volumeMounts:
+            - name: sources
+              mountPath: /etc/kubernetes/sources
+          command:
+            - /bin/bash
+            - -c
+            - |
+              ls  /etc/kubernetes/sources
       containers:
         - image: ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
           name: tools
@@ -34,7 +45,7 @@ spec:
             - /bin/bash
             - -c
             - |
-              ls
+              ls  /etc/kubernetes/sources
               pwd
               time git clone https://github.com/liangyuanpeng/kubernetes.git -b fix_sts_roll_dev --depth=1
               #pwd
