@@ -92,7 +92,7 @@ jobs:
           job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
           echo "job status is :"$job_status
           #retry
-          if [ "$job_status" = "Complete" ]; then
+          if [ "$job_status" = "" ]; then
             kubectl logs $jobpod -f 
           fi
           job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
