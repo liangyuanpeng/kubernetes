@@ -40,7 +40,7 @@ jobs:
 
       - name: pull
         run: |
-          ls
+          ls -allh
           pwd
           nohup docker pull kindest/node:v1.28.0 &
 
