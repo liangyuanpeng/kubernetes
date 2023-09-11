@@ -102,3 +102,10 @@ jobs:
           else
             exit 1
           fi
+
+      - uses: chainguard-dev/actions/kind-diag@main
+        if: always()
+        with:
+          cluster-resources: nodes,namespaces,
+          namespace-resources: configmaps,pods,svc
+          artifact-name: kindlogs
