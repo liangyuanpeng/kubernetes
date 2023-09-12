@@ -43,6 +43,7 @@ jobs:
           ls -allh
           pwd
           nohup docker pull kindest/node:v1.28.0 &
+          nohup docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1 &
       - name: checkoutactions
         uses: actions/checkout@v3
         with:
@@ -65,7 +66,6 @@ jobs:
 
       - name: download kind
         run: |
-          nohup docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1 &
           wget -q https://github.com/kubernetes-sigs/kind/releases/download/v0.20.0/kind-linux-amd64
           chmod +x kind-linux-amd64 &&  mv kind-linux-amd64 /usr/local/bin/kind
 
@@ -86,7 +86,7 @@ jobs:
           jobpod=$(kubectl get pods --selector=app=kubernetes --output=jsonpath='{.items[*].metadata.name}')
           kubectl wait pod --for=condition=Ready=true $jobpod
           kubectl get po 
-          
+
       - name: check logs
         run: |
           kubectl logs $jobpod -f 
