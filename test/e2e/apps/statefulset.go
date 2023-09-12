@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -194,8 +195,13 @@ var _ = SIGDescribe("StatefulSet", func() {
 			deleteStatefulPodAtIndex(ctx, c, 0, ss)
 			e2estatefulset.WaitForRunningAndReady(ctx, c, 3, ss)
 			ss = getStatefulSet(ctx, c, ss.Namespace, ss.Name)
+
+			currentRevision, updateRevision = ss.Status.CurrentRevision, ss.Status.UpdateRevision
+			framework.ExpectNotEqual(currentRevision, updateRevision, "Current revision should not equal update revision during rolling update")
+
 			pods = e2estatefulset.GetPodList(ctx, c, ss)
 			for i := range pods.Items {
+				log.Printf("partition%s|%s\n", i,pods.Items[i].Spec.Containers[0].Image)
 				if i < int(*ss.Spec.UpdateStrategy.RollingUpdate.Partition) {
 					framework.ExpectEqual(pods.Items[i].Spec.Containers[0].Image, oldImage, fmt.Sprintf("Pod %s/%s has image %s not equal to current image %s",
 						pods.Items[i].Namespace,
