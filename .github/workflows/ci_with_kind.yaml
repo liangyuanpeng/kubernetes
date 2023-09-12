@@ -72,63 +72,91 @@ jobs:
           docker login ghcr.io -uliangyuanpeng -p${{ secrets.GITHUB_TOKEN }}
           docker push ghcr.io/liangyuanpeng/kindest/node:$IMGTAG
           docker logout ghcr.io
+          echo "kindnode=ghcr.io/liangyuanpeng/kindest/node:$IMGTAG" >> "$GITHUB_OUTPUT"
 
-  # ci:
-  #   name: ci
-  #   needs: buildkind
-  #   runs-on: ubuntu-22.04
-  #   steps:
+  ci:
+    name: ci
+    runs-on: ubuntu-22.04
+    needs: buildkind
+    strategy:
+      matrix:
+        kindnode: 
+        - ${{ needs.buildkind.outputs.kindnode }}
+        - kindest/node:v1.28.0
+    steps:
+      - name: pull
+        run: |
+          ls -allh
+          pwd
+          nohup ${{ matrix.kindnode }} &
+          nohup docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1 &
+      - name: checkoutactions
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
 
-  #     - name: pull
-  #       run: |
-  #         nohup docker pull kindest/node:v1.27.3 &
+      # - uses: actions/setup-go@v3
+      #   with:
+      #     go-version: '1.20'
 
-  #     - name: checkoutactions
-  #       uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: 1
+      - uses: oras-project/setup-oras@v1
+        with:
+          version: 1.0.0
 
-  #     - uses: actions/setup-go@v3
-  #       with:
-  #         go-version: '1.20'
+      - name: clean
+        run: |
+          nohup docker rmi `docker images -aq` &
+          rm -rf /opt/hostedtoolcache/CodeQL
+          rm -rf /opt/hostedtoolcache/node
+          rm -rf /opt/hostedtoolcache/Python
 
-  #     - uses: oras-project/setup-oras@v1
-  #       with:
-  #         version: 1.0.0
+      - name: download kind
+        run: |
+          wget -q https://github.com/kubernetes-sigs/kind/releases/download/v0.20.0/kind-linux-amd64
+          chmod +x kind-linux-amd64 &&  mv kind-linux-amd64 /usr/local/bin/kind
 
-  #     - name: clean
-  #       run: |
-  #         nohup docker rmi `docker images -aq` &
-  #         rm -rf /opt/hostedtoolcache/CodeQL
-  #         rm -rf /opt/hostedtoolcache/node
-  #         rm -rf /opt/hostedtoolcache/Python
+      - name: create cluster with kind
+        run: |
+          sed -i 's#NODEIMG#'${{ matrix.kindnode }}'#g'  hack/kind-config.yaml
+          kind create cluster --config hack/kind-config.yaml
+          docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
+          kind load docker-image ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
+          kubectl create clusterrolebinding permissive-binding --clusterrole=cluster-admin --group=system:serviceaccounts
+          kubectl apply -f hack/job.yaml
+          kubectl wait node --all --for condition=ready
 
-  #     - name: build kind
-  #       run: |
-  #         wget -q https://github.com/kubernetes-sigs/kind/releases/download/v0.20.0/kind-linux-amd64
-  #         chmod +x kind-linux-amd64 &&  mv kind-linux-amd64 /usr/local/bin/kind
+      - name: run ci
+        run: |
+          kubectl get po -A 
+          jobpod=$(kubectl get pods --selector=app=kubernetes --output=jsonpath='{.items[*].metadata.name}')
+          kubectl wait pod --for=condition=Ready=true $jobpod
+          kubectl get po 
 
-  #     - name: run ci
-  #       run: |
-  #         nohup docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1 &
-  #         #TODO use the new code for kind 
-  #         kind create cluster --image ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-591-gabb74c7afa4
-  #         kubectl get po -A
-  #         docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
-  #         kind load docker-image ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
-  #         kubectl create clusterrolebinding permissive-binding --clusterrole=cluster-admin --group=system:serviceaccounts
-  #         kubectl apply -f hack/job.yaml
-  #         kubectl wait node --all --for condition=ready
-  #         kubectl get po -A 
-  #         jobpod=$(kubectl get pods --selector=app=kubernetes --output=jsonpath='{.items[*].metadata.name}')
-  #         kubectl wait pod --for=condition=Ready=true $jobpod
-  #         kubectl get po 
-  #         kubectl logs $jobpod -f 
-  #         kubectl get po 
-  #         kubectl get job
-  #         job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
-  #         if [ "$job_status" = "Complete" ]; then
-  #           exit 0
-  #         else
-  #           exit 1
-  #         fi
+      - name: check logs
+        run: |
+          jobpod=$(kubectl get pods --selector=app=kubernetes --output=jsonpath='{.items[*].metadata.name}')
+          kubectl logs $jobpod -f 
+          kubectl get po 
+          kubectl get job
+          job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
+          echo "job status is :"$job_status
+          
+      - name: check status
+        run: |
+          sleep 2
+          kubectl get job
+          kubectl get po 
+          job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
+          echo "job status is :"$job_status
+          if [ "$job_status" = "Complete" ]; then
+            exit 0
+          else
+            exit 1
+          fi
+
+      - uses: chainguard-dev/actions/kind-diag@main
+        if: always()
+        with:
+          cluster-resources: nodes,namespaces,
+          namespace-resources: configmaps,pods,svc
+          artifact-name: kindlogs

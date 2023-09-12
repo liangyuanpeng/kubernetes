@@ -20,6 +20,7 @@
 name: k8s_ci
 on:
   push:
+  workflow_call:
   workflow_dispatch:
     inputs:
       ref:
