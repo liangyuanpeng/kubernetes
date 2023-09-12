@@ -86,15 +86,14 @@ jobs:
           jobpod=$(kubectl get pods --selector=app=kubernetes --output=jsonpath='{.items[*].metadata.name}')
           kubectl wait pod --for=condition=Ready=true $jobpod
           kubectl get po 
+          
+      - name: check logs
+        run: |
           kubectl logs $jobpod -f 
           kubectl get po 
           kubectl get job
           job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
           echo "job status is :"$job_status
-          #retry
-          if [ "$job_status" = "" ]; then
-            kubectl logs $jobpod -f 
-          fi
           
       - name: check status
         run: |
