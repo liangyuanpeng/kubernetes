@@ -36,13 +36,17 @@ jobs:
   ci:
     name: ci
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        kindnode: 
+        - ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-615-g359deaec8bb
+        - kindest/node:v1.28.0
     steps:
-
       - name: pull
         run: |
           ls -allh
           pwd
-          nohup ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-615-g359deaec8bb &
+          nohup ${{ matrix.kindnode }} &
           nohup docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1 &
       - name: checkoutactions
         uses: actions/checkout@v3
@@ -71,9 +75,8 @@ jobs:
 
       - name: create cluster with kind
         run: |
-          #TODO use the new code for kind 
-          #ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-591-gabb74c7afa4
-          kind create cluster --config hack/kind.yaml
+          sed -i 's#NODEIMG#'${{ matrix.kindnode }}'#g'  hack/kind-config.yaml
+          kind create cluster --config hack/kind-config.yaml
           docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
           kind load docker-image ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
           kubectl create clusterrolebinding permissive-binding --clusterrole=cluster-admin --group=system:serviceaccounts
