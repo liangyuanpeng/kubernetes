@@ -39,7 +39,7 @@ jobs:
     strategy:
       matrix:
         kindnode: 
-        - ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-615-g359deaec8bb
+        - ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-745-ga657643dd0c
         - kindest/node:v1.28.0
     steps:
       - name: pull
