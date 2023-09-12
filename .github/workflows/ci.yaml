@@ -98,6 +98,7 @@ jobs:
           
       - name: check status
         run: |
+          sleep 2
           kubectl get job
           kubectl get po 
           job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
