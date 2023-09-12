@@ -89,6 +89,7 @@ jobs:
 
       - name: check logs
         run: |
+          jobpod=$(kubectl get pods --selector=app=kubernetes --output=jsonpath='{.items[*].metadata.name}')
           kubectl logs $jobpod -f 
           kubectl get po 
           kubectl get job
