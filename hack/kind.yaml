@@ -1,0 +1,13 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  image: sed -i 's/PODSUBNET/10.244.0.0/g'  kind_member4.yaml ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-615-g359deaec8bb
+  extraMounts:
+    - hostPath: /home/runner/kubernetes/kubernetes
+      containerPath: /etc/kubernetes/sources/kubernetes
+  kubeadmConfigPatches:
+    - |
+      kind: KubeletConfiguration
+      serializeImagePulls: false
+      maxParallelImagePulls: 2
