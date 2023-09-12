@@ -657,7 +657,7 @@ var _ = SIGDescribe("StatefulSet", func() {
 			canaryUpdatesWithPartition(2, ctx)
 		})
 
-		framework.ConformanceIt("should perform canary updates and phased rolling updates of template modifications with partiton 1", func(ctx context.Context) {
+		framework.ConformanceIt("landev sts roll dev", func(ctx context.Context) {
 			testaa(ctx)
 		})
 

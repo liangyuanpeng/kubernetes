@@ -66,5 +66,6 @@ spec:
               cd test/e2e
               echo "begin run e2e......"
               #kubetest --test --test_args="--ginkgo.focus=\[StatefulSetBasic\]"
-              ginkgo --focus="should perform canary updates and phased rolling updates" -v --fail-fast
+              #ginkgo --focus="should perform canary updates and phased rolling updates" -v --fail-fast
+              ginkgo --focus="landev sts roll dev" -v --fail-fast
       restartPolicy: Never
