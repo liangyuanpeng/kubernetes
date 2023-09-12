@@ -20,7 +20,8 @@
 name: ci_with_kind
 on:
   push:
-    branches: [ bd-api ]
+    branches: 
+    # - bd-api
   workflow_dispatch:
     inputs:
       ref:
@@ -37,6 +38,8 @@ jobs:
   buildkind:
     name: build
     runs-on: ubuntu-22.04
+    permissions:
+      packages: write
     steps:
 
       - name: checkoutactions
@@ -63,64 +66,69 @@ jobs:
       - name: build
         run: |
           mkdir tmp && cd tmp
-          kind build node-image --image kind:ci --kube-root $PWD/../ 
+          IMGREF=`git describe --tags`
+          IMGTAG=v0.20.0-$IMGREF
+          kind build node-image --image ghcr.io/liangyuanpeng/kindest/node:$IMGTAG --kube-root $PWD/../ 
+          docker login ghcr.io -uliangyuanpeng -p${{ secrets.GITHUB_TOKEN }}
+          docker push ghcr.io/liangyuanpeng/kindest/node:$IMGTAG
+          docker logout ghcr.io
 
-  ci:
-    name: ci
-    needs: buildkind
-    runs-on: ubuntu-22.04
-    steps:
+  # ci:
+  #   name: ci
+  #   needs: buildkind
+  #   runs-on: ubuntu-22.04
+  #   steps:
 
-      - name: pull
-        run: |
-          nohup docker pull kindest/node:v1.27.3 &
+  #     - name: pull
+  #       run: |
+  #         nohup docker pull kindest/node:v1.27.3 &
 
-      - name: checkoutactions
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
+  #     - name: checkoutactions
+  #       uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 1
 
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '1.20'
+  #     - uses: actions/setup-go@v3
+  #       with:
+  #         go-version: '1.20'
 
-      - uses: oras-project/setup-oras@v1
-        with:
-          version: 1.0.0
+  #     - uses: oras-project/setup-oras@v1
+  #       with:
+  #         version: 1.0.0
 
-      - name: clean
-        run: |
-          nohup docker rmi `docker images -aq` &
-          rm -rf /opt/hostedtoolcache/CodeQL
-          rm -rf /opt/hostedtoolcache/node
-          rm -rf /opt/hostedtoolcache/Python
+  #     - name: clean
+  #       run: |
+  #         nohup docker rmi `docker images -aq` &
+  #         rm -rf /opt/hostedtoolcache/CodeQL
+  #         rm -rf /opt/hostedtoolcache/node
+  #         rm -rf /opt/hostedtoolcache/Python
 
-      - name: build kind
-        run: |
-          wget -q https://github.com/kubernetes-sigs/kind/releases/download/v0.20.0/kind-linux-amd64
-          chmod +x kind-linux-amd64 &&  mv kind-linux-amd64 /usr/local/bin/kind
+  #     - name: build kind
+  #       run: |
+  #         wget -q https://github.com/kubernetes-sigs/kind/releases/download/v0.20.0/kind-linux-amd64
+  #         chmod +x kind-linux-amd64 &&  mv kind-linux-amd64 /usr/local/bin/kind
 
-      - name: run ci
-        run: |
-          nohup docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1 &
-          #TODO use the new code for kind 
-          kind create cluster --image ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-591-gabb74c7afa4
-          kubectl get po -A
-          docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
-          kind load docker-image ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
-          kubectl create clusterrolebinding permissive-binding --clusterrole=cluster-admin --group=system:serviceaccounts
-          kubectl apply -f hack/job.yaml
-          kubectl wait node --all --for condition=ready
-          kubectl get po -A 
-          jobpod=$(kubectl get pods --selector=app=kubernetes --output=jsonpath='{.items[*].metadata.name}')
-          kubectl wait pod --for=condition=Ready=true $jobpod
-          kubectl get po 
-          kubectl logs $jobpod -f 
-          kubectl get po 
-          kubectl get job
-          job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
-          if [ "$job_status" = "Complete" ]; then
-            exit 0
-          else
-            exit 1
-          fi
+  #     - name: run ci
+  #       run: |
+  #         nohup docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1 &
+  #         #TODO use the new code for kind 
+  #         kind create cluster --image ghcr.io/liangyuanpeng/kindest/node:v0.20.0-v1.29.0-alpha.0-591-gabb74c7afa4
+  #         kubectl get po -A
+  #         docker pull ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
+  #         kind load docker-image ghcr.io/liangyuanpeng/ubuntu:tools-v1.1
+  #         kubectl create clusterrolebinding permissive-binding --clusterrole=cluster-admin --group=system:serviceaccounts
+  #         kubectl apply -f hack/job.yaml
+  #         kubectl wait node --all --for condition=ready
+  #         kubectl get po -A 
+  #         jobpod=$(kubectl get pods --selector=app=kubernetes --output=jsonpath='{.items[*].metadata.name}')
+  #         kubectl wait pod --for=condition=Ready=true $jobpod
+  #         kubectl get po 
+  #         kubectl logs $jobpod -f 
+  #         kubectl get po 
+  #         kubectl get job
+  #         job_status=$(kubectl get job k8s -o jsonpath='{.status.conditions[0].type}')
+  #         if [ "$job_status" = "Complete" ]; then
+  #           exit 0
+  #         else
+  #           exit 1
+  #         fi
