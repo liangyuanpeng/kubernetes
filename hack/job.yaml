@@ -46,8 +46,6 @@ spec:
             - /bin/bash
             - -c
             - |
-              ls  /etc/kubernetes/sources
-              pwd
               cd /etc/kubernetes/sources
               #curl https://sdk.cloud.google.com | bash
               export USER=lan
