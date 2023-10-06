@@ -175,6 +175,10 @@ func createAggregatorServer(aggregatorConfig aggregatorapiserver.CompletedConfig
 		return nil, err
 	}
 
+	for _, v := range apiServices {
+		klog.Info("apiServices:", v.Name)
+	}
+	// klog.Info("apiServices:", apiServices)
 	err = aggregatorServer.GenericAPIServer.AddBootSequenceHealthChecks(
 		makeAPIServiceAvailableHealthCheck(
 			"autoregister-completion",
@@ -223,6 +227,7 @@ func makeAPIServiceAvailableHealthCheck(name string, apiServices []*v1.APIServic
 		pendingServiceNamesLock.Lock()
 		defer pendingServiceNamesLock.Unlock()
 		if !pendingServiceNames.Has(service.Name) {
+			klog.Info("pending service:", service.Name)
 			return
 		}
 		if v1helper.IsAPIServiceConditionTrue(service, v1.Available) {

@@ -25,6 +25,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
+	"k8s.io/klog/v2"
 	rest "k8s.io/client-go/rest"
 	v1beta1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1"
 	scheme "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/scheme"
@@ -107,6 +108,7 @@ func (c *aPIServices) Watch(ctx context.Context, opts v1.ListOptions) (watch.Int
 // Create takes the representation of a aPIService and creates it.  Returns the server's representation of the aPIService, and an error, if there is any.
 func (c *aPIServices) Create(ctx context.Context, aPIService *v1beta1.APIService, opts v1.CreateOptions) (result *v1beta1.APIService, err error) {
 	result = &v1beta1.APIService{}
+	klog.Info("aPIServices.v1beta1.create:",aPIService.Name)
 	err = c.client.Post().
 		Resource("apiservices").
 		VersionedParams(&opts, scheme.ParameterCodec).
