@@ -214,6 +214,7 @@ func makeAPIServiceAvailableHealthCheck(name string, apiServices []*v1.APIServic
 	pendingServiceNamesLock := &sync.RWMutex{}
 	pendingServiceNames := sets.NewString()
 	for _, service := range apiServices {
+		klog.Info("makeAPIServiceAvailableHealthCheck:","service.name:",service.Name)
 		pendingServiceNames.Insert(service.Name)
 	}
 

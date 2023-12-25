@@ -81,6 +81,7 @@ func NewTestConfig(t testing.TB) *embed.Config {
 // RunEtcd starts an embedded etcd server with the provided config
 // (or NewTestConfig(t) if nil), and returns a client connected to the server.
 // The server is terminated when the test ends.
+// landev.RunEtcd
 func RunEtcd(t testing.TB, cfg *embed.Config) *clientv3.Client {
 	t.Helper()
 
@@ -88,24 +89,24 @@ func RunEtcd(t testing.TB, cfg *embed.Config) *clientv3.Client {
 		cfg = NewTestConfig(t)
 	}
 
-	e, err := embed.StartEtcd(cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(e.Close)
+	// e, err := embed.StartEtcd(cfg)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// t.Cleanup(e.Close)
 
-	select {
-	case <-e.Server.ReadyNotify():
-	case <-time.After(60 * time.Second):
-		e.Server.Stop() // trigger a shutdown
-		t.Fatal("server took too long to start")
-	}
-	go func() {
-		err := <-e.Err()
-		if err != nil {
-			t.Error(err)
-		}
-	}()
+	// select {
+	// case <-e.Server.ReadyNotify():
+	// case <-time.After(60 * time.Second):
+	// 	e.Server.Stop() // trigger a shutdown
+	// 	t.Fatal("server took too long to start")
+	// }
+	// go func() {
+	// 	err := <-e.Err()
+	// 	if err != nil {
+	// 		t.Error(err)
+	// 	}
+	// }()
 
 	tlsConfig, err := cfg.ClientTLSInfo.ClientConfig()
 	if err != nil {
@@ -114,7 +115,7 @@ func RunEtcd(t testing.TB, cfg *embed.Config) *clientv3.Client {
 
 	client, err := clientv3.New(clientv3.Config{
 		TLS:         tlsConfig,
-		Endpoints:   e.Server.Cluster().ClientURLs(),
+		Endpoints:   []string{"http://127.0.0.1:2379"},
 		DialTimeout: 10 * time.Second,
 		DialOptions: []grpc.DialOption{grpc.WithBlock()},
 		Logger:      zaptest.NewLogger(t, zaptest.Level(zapcore.ErrorLevel)).Named("etcd-client"),

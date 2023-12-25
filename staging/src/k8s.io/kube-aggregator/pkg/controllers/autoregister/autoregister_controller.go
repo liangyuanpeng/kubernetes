@@ -215,6 +215,7 @@ func (c *autoRegisterController) processNextWorkItem() bool {
 func (c *autoRegisterController) checkAPIService(name string) (err error) {
 	desired := c.GetAPIServiceToSync(name)
 	curr, err := c.apiServiceLister.Get(name)
+	klog.Info("landev.checkAPIService", "name:", name)
 
 	// if we've never synced this service successfully, record a successful sync.
 	hasSynced := c.hasSyncedSuccessfully(name)

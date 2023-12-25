@@ -44,6 +44,7 @@ type AutoAPIServiceRegistration interface {
 	RemoveAPIServiceToSync(name string)
 }
 
+// landev.crdRegistrationController
 type crdRegistrationController struct {
 	crdLister crdlisters.CustomResourceDefinitionLister
 	crdSynced cache.InformerSynced
