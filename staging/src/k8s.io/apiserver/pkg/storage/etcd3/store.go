@@ -223,6 +223,10 @@ func (s *store) Create(ctx context.Context, key string, obj, out runtime.Object,
 	span.AddEvent("TransformToStorage succeeded")
 
 	startTime := time.Now()
+	if strings.Index(preparedKey, "apiregistration.k8s.io") > 0 {
+		klog.Info("landev.put.api:", preparedKey)
+	}
+	klog.Info("landev.put.key:", preparedKey)
 	txnResp, err := s.client.KV.Txn(ctx).If(
 		notFound(preparedKey),
 	).Then(
@@ -236,6 +240,7 @@ func (s *store) Create(ctx context.Context, key string, obj, out runtime.Object,
 	span.AddEvent("Txn call succeeded")
 
 	if !txnResp.Succeeded {
+		klog.Info("landev.put.failed!:", preparedKey, txnResp.Responses)
 		return storage.NewKeyExistsError(preparedKey, 0)
 	}
 
@@ -243,6 +248,7 @@ func (s *store) Create(ctx context.Context, key string, obj, out runtime.Object,
 		putResp := txnResp.Responses[0].GetResponsePut()
 		err = decode(s.codec, s.versioner, data, out, putResp.Header.Revision)
 		if err != nil {
+			klog.Info("landev.put.failed.decode.failed!:", preparedKey, txnResp.Responses[0].GetResponsePut())
 			span.AddEvent("decode failed", attribute.Int("len", len(data)), attribute.String("err", err.Error()))
 			recordDecodeError(s.groupResourceString, preparedKey)
 			return err
