@@ -9,6 +9,12 @@ jobs:
   e2e:
     name: e2e
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ETCD_ENDPOINTS: 
+        - http://127.0.0.1:2379
+        - "0"
     steps:
 
       - uses: actions/setup-go@v4
@@ -19,8 +25,13 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: start xline 
+        run: |
+          if [ ${{ matrix.k8s }} != "0" ];then 
+            docker run -e RUST_LOG=debug  -it -d --name xline -p 2379:2379 ghcr.io/xline-kv/xline:v0.6.0 xline --name node1 --members node1=0.0.0.0:2379 --data-dir /tmp/xline --storage-engine rocksdb
+          fi
+
       - name: runci
         run: |
           go mod tidy 
-          docker run -e RUST_LOG=debug  -it -d --name xline -p 2379:2379 ghcr.io/xline-kv/xline:v0.6.0 xline --name node1 --members node1=0.0.0.0:2379 --data-dir /tmp/xline --storage-engine rocksdb
           go test -timeout 30s -run ^Test* k8s.io/apiserver/pkg/storage/etcd3 -v
