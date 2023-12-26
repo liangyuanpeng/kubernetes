@@ -112,6 +112,7 @@ func RunEtcd(t testing.TB, cfg *embed.Config) *clientv3.Client {
 				t.Error(err)
 			}
 		}()
+		endpoints = e.Server.Cluster().ClientURLs()
 	}
 
 	tlsConfig, err := cfg.ClientTLSInfo.ClientConfig()
