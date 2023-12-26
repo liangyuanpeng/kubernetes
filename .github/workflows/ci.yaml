@@ -32,6 +32,8 @@ jobs:
           fi
 
       - name: runci
+        env:
+          ETCD_ENDPOINTS: ${{ matrix.ETCD_ENDPOINTS }}
         run: |
           go mod tidy 
           go test k8s.io/apiserver/pkg/storage/etcd3 -v
