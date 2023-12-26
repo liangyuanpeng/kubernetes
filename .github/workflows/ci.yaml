@@ -34,4 +34,4 @@ jobs:
       - name: runci
         run: |
           go mod tidy 
-          go test -timeout 30s -run ^Test* k8s.io/apiserver/pkg/storage/etcd3 -v
+          go test k8s.io/apiserver/pkg/storage/etcd3 -v
