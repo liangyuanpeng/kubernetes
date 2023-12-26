@@ -18,6 +18,7 @@ package testserver
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/url"
 	"os"
@@ -91,7 +92,7 @@ func RunEtcd(t testing.TB, cfg *embed.Config) *clientv3.Client {
 
 	endpoints := []string{"http://127.0.0.1:2379"}
 	strtmp := os.Getenv("ETCD_ENDPOINTS")
-	if strtmp != "" && strtmp!="0" {
+	if strtmp != "" && strtmp != "0" {
 		endpoints = []string{strtmp}
 	} else {
 		e, err := embed.StartEtcd(cfg)
@@ -114,6 +115,8 @@ func RunEtcd(t testing.TB, cfg *embed.Config) *clientv3.Client {
 		}()
 		endpoints = e.Server.Cluster().ClientURLs()
 	}
+
+	log.Println("endpoints:", endpoints)
 
 	tlsConfig, err := cfg.ClientTLSInfo.ClientConfig()
 	if err != nil {
