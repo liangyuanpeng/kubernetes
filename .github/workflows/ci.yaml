@@ -27,7 +27,7 @@ jobs:
 
       - name: start xline 
         run: |
-          if [ ${{ matrix.k8s }} != "0" ];then 
+          if [ ${{ matrix.ETCD_ENDPOINTS }} != "0" ];then 
             docker run -e RUST_LOG=debug  -it -d --name xline -p 2379:2379 ghcr.io/xline-kv/xline:v0.6.0 xline --name node1 --members node1=0.0.0.0:2379 --data-dir /tmp/xline --storage-engine rocksdb
           fi
 
