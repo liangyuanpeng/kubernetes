@@ -5,6 +5,7 @@ module k8s.io/api
 go 1.21
 
 require (
+	github.com/gogo/protobuf v1.3.2
 	github.com/stretchr/testify v1.8.4
 	k8s.io/apimachinery v0.0.0
 )
@@ -12,7 +13,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
