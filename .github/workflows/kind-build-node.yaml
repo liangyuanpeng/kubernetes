@@ -62,7 +62,7 @@ jobs:
       - name: build kind node
         id: build-kind-node
         run: |
-          IMGTAG=`git describe --tags`
+          IMGTAG=`git rev-parse HEAD`
           mkdir -p tmp
           cd tmp
           kind build node-image --image ghcr.io/$GITHUB_REPOSITORY_OWNER/kindest/testnode:$KIND_VERSION-$IMGTAG  --kube-root $PWD/../

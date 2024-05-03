@@ -37,13 +37,6 @@ jobs:
         - ubuntu-22.04
         - ubuntu-latest
     steps:
-      - uses: actions/setup-go@v5
-        if: matrix.goversion != 'go.mod'
-        with:
-          go-version: ${{ matrix.goversion }}
-      - uses: oras-project/setup-oras@v1
-        with:
-          version: 1.0.0
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
@@ -54,6 +47,13 @@ jobs:
           large-packages: true
           docker-images: true
           swap-storage: true
+      - uses: actions/setup-go@v5
+        if: matrix.goversion != 'go.mod'
+        with:
+          go-version: ${{ matrix.goversion }}
+      - uses: oras-project/setup-oras@v1
+        with:
+          version: 1.0.0
       - name: checkoutactions
         uses: actions/checkout@v4
       - uses: actions/setup-go@v5
