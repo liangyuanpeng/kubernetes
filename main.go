@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+	// TestValidateValidatingAdmissionPolicy
 	r := apiservercel.CompilationResult{}
 	log.Println(r)
 	log.Println("main")
