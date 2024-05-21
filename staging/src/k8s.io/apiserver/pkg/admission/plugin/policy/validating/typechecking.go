@@ -445,6 +445,7 @@ func createVariableOpts(declType *apiservercel.DeclType, variables ...string) []
 	if declType != nil {
 		t = declType.CelType()
 	}
+	klog.Info("lan.createVariableOpts.variables:", variables)
 	for _, v := range variables {
 		opts = append(opts, cel.Variable(v, t))
 	}
