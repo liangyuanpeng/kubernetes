@@ -36,6 +36,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/component-base/featuregate"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -119,6 +120,7 @@ func (a *Plugin) InspectFeatureGates(featureGates featuregate.FeatureGate) {
 }
 
 func compilePolicy(policy *Policy) Validator {
+	klog.Info("lan.compilePolicy........")
 	hasParam := false
 	if policy.Spec.ParamKind != nil {
 		hasParam = true
