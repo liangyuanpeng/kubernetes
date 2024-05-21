@@ -108,6 +108,7 @@ func (r *TypeCheckingResult) String() string {
 // The result is nil if type checking returns no warning.
 // The policy object is NOT mutated. The caller should update Status accordingly
 func (c *TypeChecker) Check(policy *v1.ValidatingAdmissionPolicy) []v1.ExpressionWarning {
+	klog.Info("lan.Check.......")
 	ctx := c.CreateContext(policy)
 
 	// warnings to return, note that the capacity is optimistically set to zero
@@ -200,6 +201,7 @@ func (c *TypeChecker) compiler(ctx *TypeCheckingContext, typeOverwrite typeOverw
 func (c *TypeChecker) CheckExpression(ctx *TypeCheckingContext, expression string) TypeCheckingResults {
 	var results TypeCheckingResults
 	for i, gvk := range ctx.gvks {
+		klog.Info("lan.CheckExpression.gvk:", gvk)
 		declType := ctx.declTypes[i]
 		compiler, err := c.compiler(ctx, typeOverwrite{
 			object: declType,

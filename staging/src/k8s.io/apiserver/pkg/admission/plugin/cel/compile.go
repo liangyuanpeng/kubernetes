@@ -26,6 +26,7 @@ import (
 	apiservercel "k8s.io/apiserver/pkg/cel"
 	"k8s.io/apiserver/pkg/cel/environment"
 	"k8s.io/apiserver/pkg/cel/library"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -178,12 +179,16 @@ func (c compiler) CompileCELExpression(expressionAccessor ExpressionAccessor, op
 		return resultError(fmt.Sprintf("unexpected error loading CEL environment: %v", err), apiservercel.ErrorTypeInternal)
 	}
 
+	//lan 对每一个cel表达式进行编译
 	ast, issues := env.Compile(expressionAccessor.GetExpression())
 	if issues != nil {
 		return resultError("compilation failed: "+issues.String(), apiservercel.ErrorTypeInvalid)
 	}
 	found := false
 	returnTypes := expressionAccessor.ReturnTypes()
+	// 这里是找cel表达式的返回值类型
+	//TODO returnTypes这个数组有null_type, 是不是可以直接过滤? 哪里会用到这个类型
+	klog.Info("lan.CompileCELExpression.returnTypes:"+expressionAccessor.GetExpression()+" \n", ast.OutputType(), returnTypes)
 	for _, returnType := range returnTypes {
 		if ast.OutputType() == returnType || cel.AnyType == returnType {
 			found = true
@@ -201,6 +206,7 @@ func (c compiler) CompileCELExpression(expressionAccessor ExpressionAccessor, op
 		return resultError(reason, apiservercel.ErrorTypeInvalid)
 	}
 
+	//lan 这里目前可以看作是一个防御性编程,因为原注释也说了 应该不可能,因为编译没有问题
 	_, err = cel.AstToCheckedExpr(ast)
 	if err != nil {
 		// should be impossible since env.Compile returned no issues
