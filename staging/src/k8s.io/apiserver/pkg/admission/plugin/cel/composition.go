@@ -32,6 +32,7 @@ import (
 	apiservercel "k8s.io/apiserver/pkg/cel"
 	"k8s.io/apiserver/pkg/cel/environment"
 	"k8s.io/apiserver/pkg/cel/lazy"
+	"k8s.io/klog/v2"
 )
 
 const VariablesTypeName = "kubernetes.variables"
@@ -79,6 +80,7 @@ func (c *CompositedCompiler) CompileAndStoreVariables(variables []NamedExpressio
 }
 
 func (c *CompositedCompiler) CompileAndStoreVariable(variable NamedExpressionAccessor, options OptionalVariableDeclarations, mode environment.Type) CompilationResult {
+	klog.Info("lan.CompileAndStoreVariable.variable.GetName:", variable.GetName())
 	result := c.Compiler.CompileCELExpression(variable, options, mode)
 	c.CompositionEnv.AddField(variable.GetName(), result.OutputType)
 	c.CompositionEnv.CompiledVariables[variable.GetName()] = result
