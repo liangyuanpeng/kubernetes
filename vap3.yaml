@@ -4,13 +4,16 @@ metadata:
   name: vap3
 spec:
   failurePolicy: Fail
+  # matchConditions:
+  # - name: 'is-deployment'
+  #   expression: 'metadata.kind == "Deployment"'
   matchConstraints:
     resourceRules:
     - apiGroups:   ["apps"]
       apiVersions: ["v1"]
       operations:  ["CREATE", "UPDATE"]
       # resources:   ["deployments","daemonsets","statefulsets"]
-      resources:   ["statefulsets2"]
+      resources:   ["statefulsets"]
   auditAnnotations:
     - key: "high-replica-count"
       valueExpression: "'audit StatefulSets spec.replicas set to ' + string(object.spec.replicas)"
