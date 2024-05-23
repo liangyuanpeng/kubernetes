@@ -81,9 +81,10 @@ func (v *validator) Validate(ctx context.Context, matchedResource schema.GroupVe
 	} else {
 		f = *v.failPolicy
 	}
+	klog.Info("lan.Validate.versionedAttr:", versionedAttr)
+	klog.Info("lan.Validate.versionedParams:", versionedParams)
+
 	if v.celMatcher != nil {
-		klog.Info("lan.Validate.versionedAttr:", versionedAttr)
-		klog.Info("lan.Validate.versionedParams:", versionedParams)
 		matchResults := v.celMatcher.Match(ctx, versionedAttr, versionedParams, authz)
 		if matchResults.Error != nil {
 			return ValidateResult{

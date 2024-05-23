@@ -35,6 +35,7 @@ import (
 	"k8s.io/apiserver/pkg/cel"
 	"k8s.io/apiserver/pkg/cel/environment"
 	"k8s.io/apiserver/pkg/cel/library"
+	"k8s.io/klog/v2"
 )
 
 // filterCompiler implement the interface FilterCompiler.
@@ -83,6 +84,7 @@ func (a *evaluationActivation) Parent() interpreter.Activation {
 
 // Compile compiles the cel expressions defined in the ExpressionAccessors into a Filter
 func (c *filterCompiler) Compile(expressionAccessors []ExpressionAccessor, options OptionalVariableDeclarations, mode environment.Type) Filter {
+	klog.Info("lan.filterCompiler.Compile.......")
 	compilationResults := make([]CompilationResult, len(expressionAccessors))
 	for i, expressionAccessor := range expressionAccessors {
 		if expressionAccessor == nil {
@@ -131,6 +133,7 @@ func objectToResolveVal(r runtime.Object) (interface{}, error) {
 // runtimeCELCostBudget was added for testing purpose only. Callers should always use const RuntimeCELCostBudget from k8s.io/apiserver/pkg/apis/cel/config.go as input.
 func (f *filter) ForInput(ctx context.Context, versionedAttr *admission.VersionedAttributes, request *admissionv1.AdmissionRequest, inputs OptionalVariableBindings, namespace *v1.Namespace, runtimeCELCostBudget int64) ([]EvaluationResult, int64, error) {
 	// TODO: replace unstructured with ref.Val for CEL variables when native type support is available
+	klog.Info("lan.ForInput......")
 	evaluations := make([]EvaluationResult, len(f.compilationResults))
 	var err error
 

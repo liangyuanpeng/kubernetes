@@ -163,6 +163,7 @@ func (c *compositionContext) Variables(activation any) ref.Val {
 }
 
 func (f *CompositedFilter) ForInput(ctx context.Context, versionedAttr *admission.VersionedAttributes, request *v1.AdmissionRequest, optionalVars OptionalVariableBindings, namespace *corev1.Namespace, runtimeCELCostBudget int64) ([]EvaluationResult, int64, error) {
+	klog.Info("lan.CompositedFilter.ForInput......")
 	ctx = f.compositionEnv.CreateContext(ctx)
 	return f.Filter.ForInput(ctx, versionedAttr, request, optionalVars, namespace, runtimeCELCostBudget)
 }
