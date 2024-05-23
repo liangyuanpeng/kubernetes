@@ -88,6 +88,7 @@ func (c *CompositedCompiler) CompileAndStoreVariable(variable NamedExpressionAcc
 }
 
 func (c *CompositedCompiler) Compile(expressions []ExpressionAccessor, optionalDecls OptionalVariableDeclarations, envType environment.Type) Filter {
+	klog.Info("lan.CompositedCompiler.Compile...")
 	filter := c.FilterCompiler.Compile(expressions, optionalDecls, envType)
 	return &CompositedFilter{
 		Filter:         filter,
