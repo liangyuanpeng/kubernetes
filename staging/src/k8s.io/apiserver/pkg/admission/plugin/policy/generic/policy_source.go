@@ -272,6 +272,7 @@ func (s *policySource[P, B, E]) calculatePolicyData() ([]PolicyHook[P, B, E], er
 	for _, bindingSpec := range bindingList {
 		bindingAccessor := s.newBindingAccessor(bindingSpec)
 		policyKey := bindingAccessor.GetPolicyName()
+		klog.Info("lan.policySource.calculatePolicyData.policyKey:", policyKey)
 
 		// Add this binding to the list of bindings for this policy
 		policiesToBindings[policyKey] = append(policiesToBindings[policyKey], bindingSpec)
