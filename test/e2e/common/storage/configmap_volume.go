@@ -522,6 +522,11 @@ var _ = SIGDescribe("ConfigMap", func() {
 		trueVal := true
 		currentConfigMap.Immutable = &trueVal
 		currentConfigMap, err = f.ClientSet.CoreV1().ConfigMaps(f.Namespace.Name).Update(ctx, currentConfigMap, metav1.UpdateOptions{})
+		if err != nil {
+			checkConfigMap, err2 := f.ClientSet.CoreV1().ConfigMaps(f.Namespace.Name).Get(ctx, name, metav1.GetOptions{})
+			framework.ExpectNoError(err2, "Failed to get config map %q in namespace %q", configMap.Name, configMap.Namespace)
+			framework.Logf("lan.more2. currentConfigMap:%s, checkConfigMap:%s", currentConfigMap.ResourceVersion, checkConfigMap.ResourceVersion)
+		}
 		framework.ExpectNoError(err, "Failed to mark config map %q in namespace %q as immutable", configMap.Name, configMap.Namespace)
 
 		// Ensure data can't be changed now.
