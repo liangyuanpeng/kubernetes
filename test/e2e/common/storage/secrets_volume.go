@@ -390,8 +390,14 @@ var _ = SIGDescribe("Secrets", func() {
 		currentSecret, err := f.ClientSet.CoreV1().Secrets(f.Namespace.Name).Create(ctx, secret, metav1.CreateOptions{})
 		framework.ExpectNoError(err, "Failed to create secret %q in namespace %q", secret.Name, secret.Namespace)
 
+		framework.Logf("currentSecret:%s", currentSecret.ResourceVersion)
 		currentSecret.Data["data-4"] = []byte("value-4\n")
 		currentSecret, err = f.ClientSet.CoreV1().Secrets(f.Namespace.Name).Update(ctx, currentSecret, metav1.UpdateOptions{})
+		if err != nil {
+			checkSecret, err2 := f.ClientSet.CoreV1().Secrets(f.Namespace.Name).Get(ctx, name, metav1.GetOptions{})
+			framework.ExpectNoError(err2, "Failed to get secret %q in namespace %q", secret.Name, secret.Namespace)
+			framework.Logf("lan.more. currentSecret:%s, checkSecret:%s", currentSecret.ResourceVersion,checkSecret.ResourceVersion)
+		}
 		framework.ExpectNoError(err, "Failed to update secret %q in namespace %q", secret.Name, secret.Namespace)
 
 		// Mark secret as immutable.

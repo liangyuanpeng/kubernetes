@@ -326,6 +326,11 @@ var _ = SIGDescribe("Certificates API [Privileged:ClusterAdmin]", func() {
 		csrToUpdate := patchedCSR.DeepCopy()
 		csrToUpdate.Annotations["updated"] = "true"
 		updatedCSR, err := csrClient.Update(ctx, csrToUpdate, metav1.UpdateOptions{})
+		if err != nil {
+			checkCSR, err2 := csrClient.Get(ctx, createdCSR.Name, metav1.GetOptions{})
+			framework.ExpectNoError(err2, "Failed to get CSR %q ", createdCSR.Name)
+			framework.Logf("lan.more. currentCSR:%s, checkCSR:%s", updatedCSR.ResourceVersion, checkCSR.ResourceVersion)
+		}
 		framework.ExpectNoError(err)
 		gomega.Expect(updatedCSR.Annotations).To(gomega.HaveKeyWithValue("updated", "true"), "updated object should have the applied annotation")
 
