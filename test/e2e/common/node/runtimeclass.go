@@ -299,6 +299,11 @@ var _ = SIGDescribe("RuntimeClass", func() {
 		csrToUpdate := patchedRC.DeepCopy()
 		csrToUpdate.Annotations["updated"] = "true"
 		updatedRC, err := rcClient.Update(ctx, csrToUpdate, metav1.UpdateOptions{})
+		if err != nil {
+			checkRC, err2 := rcClient.Get(ctx, rc.Name, metav1.GetOptions{})
+			framework.ExpectNoError(err2, "Failed to get RC %q ", createdRC.Name)
+			framework.Logf("lan.more2. currentRC:%s, checkRC:%s", csrToUpdate.ResourceVersion, checkRC.ResourceVersion)
+		}
 		framework.ExpectNoError(err)
 		gomega.Expect(updatedRC.Annotations).To(gomega.HaveKeyWithValue("updated", "true"), "updated object should have the applied annotation")
 
