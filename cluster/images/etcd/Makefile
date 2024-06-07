@@ -142,16 +142,11 @@ ifeq ($(OS),windows)
 		$(BIN_INSTALL) $(TEMP_DIR)/etcdctl.exe $(TEMP_DIR)/etcdctl-$$version.exe; \
 	done
 else
-	for version in $(BUNDLED_ETCD_VERSIONS); do \
-		etcd_release_tmp_dir=$(shell mktemp -d); \
-		git clone https://github.com/etcd-io/etcd 
-		cd etcd 
-		make
-		# curl -sSL --retry 5 https://github.com/etcd-io/etcd/releases/download/v$$version/etcd-v$$version-linux-amd64.tar.gz | tar -xz -C $$etcd_release_tmp_dir --strip-components=1; \
-		$(BIN_INSTALL) $$etcd_release_tmp_dir/etcd $$etcd_release_tmp_dir/etcdctl $(TEMP_DIR)/; \
-		$(BIN_INSTALL) $(TEMP_DIR)/etcd $(TEMP_DIR)/etcd-$$version; \
-		$(BIN_INSTALL) $(TEMP_DIR)/etcdctl $(TEMP_DIR)/etcdctl-$$version; \
-	done
+	etcd_release_tmp_dir=$(shell mktemp -d); 
+	tar -xz etcd.zip -C $$etcd_release_tmp_dir --strip-components=1; 
+	$(BIN_INSTALL) $$etcd_release_tmp_dir/etcd $$etcd_release_tmp_dir/etcdctl $(TEMP_DIR)/; 
+	$(BIN_INSTALL) $(TEMP_DIR)/etcd $(TEMP_DIR)/etcd-$$version; 
+	$(BIN_INSTALL) $(TEMP_DIR)/etcdctl $(TEMP_DIR)/etcdctl-$$version; 
 endif
 
 else
