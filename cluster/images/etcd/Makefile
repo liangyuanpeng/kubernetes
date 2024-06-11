@@ -26,10 +26,10 @@
 # Except from etcd-$(version) and etcdctl-$(version) binaries, we also
 # need etcd and etcdctl binaries for backward compatibility reasons.
 # That binary will be set to the last version from $(BUNDLED_ETCD_VERSIONS).
-BUNDLED_ETCD_VERSIONS?=3.4.18 3.5.14
+BUNDLED_ETCD_VERSIONS?=main
 
 # LATEST_ETCD_VERSION identifies the most recent etcd version available.
-LATEST_ETCD_VERSION?=3.5.14
+LATEST_ETCD_VERSION?=main
 
 # REVISION provides a version number for this image and all it's bundled
 # artifacts. It should start at zero for each LATEST_ETCD_VERSION and increment
@@ -83,9 +83,10 @@ endif
 # This option is for running docker manifest command
 export DOCKER_CLI_EXPERIMENTAL := enabled
 # golang version should match the golang version of the official build from https://github.com/etcd-io/etcd/releases.
-GOLANG_VERSION := 1.21.10
+GOLANG_VERSION := 1.22.4
 GOARM?=7
 TEMP_DIR:=$(shell mktemp -d)
+TEMP_DIR2:=$(shell mktemp -d)
 
 DOCKERFILE.linux = Dockerfile
 DOCKERFILE.windows = Dockerfile.windows
@@ -142,11 +143,17 @@ ifeq ($(OS),windows)
 		$(BIN_INSTALL) $(TEMP_DIR)/etcdctl.exe $(TEMP_DIR)/etcdctl-$$version.exe; \
 	done
 else
-	etcd_release_tmp_dir=$(shell mktemp -d); 
-	tar -xz etcd.zip -C $$etcd_release_tmp_dir --strip-components=1; 
-	$(BIN_INSTALL) $$etcd_release_tmp_dir/etcd $$etcd_release_tmp_dir/etcdctl $(TEMP_DIR)/; 
-	$(BIN_INSTALL) $(TEMP_DIR)/etcd $(TEMP_DIR)/etcd-$$version; 
-	$(BIN_INSTALL) $(TEMP_DIR)/etcdctl $(TEMP_DIR)/etcdctl-$$version; 
+	# etcd_release_tmp_dir=$(shell mktemp -d)
+	echo ${TEMP_DIR2}
+	#tar -zxf etcd.tar.gz -C ${TEMP_DIR2} --strip-components=1
+	tar -zxf etcd.tar.gz
+	mv etcd ${TEMP_DIR2}/
+	mv etcdctl ${TEMP_DIR2}/
+	mv etcdutl ${TEMP_DIR2}/
+	ls ${TEMP_DIR2}
+	$(BIN_INSTALL) ${TEMP_DIR2}/etcd ${TEMP_DIR2}/etcdctl $(TEMP_DIR)/
+	$(BIN_INSTALL) $(TEMP_DIR)/etcd $(TEMP_DIR)/etcd-master
+	$(BIN_INSTALL) $(TEMP_DIR)/etcdctl $(TEMP_DIR)/etcdctl-master
 endif
 
 else
