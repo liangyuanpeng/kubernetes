@@ -20,6 +20,7 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
+	"log"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -27,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -122,6 +124,11 @@ func NewPolicySource[P runtime.Object, B runtime.Object, E Evaluator](
 	return res
 }
 
+type CommonObject struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+}
+
 func (s *policySource[P, B, E]) Run(ctx context.Context) error {
 	if s.ctx != nil {
 		return fmt.Errorf("policy source already running")
@@ -147,7 +154,9 @@ func (s *policySource[P, B, E]) Run(ctx context.Context) error {
 		AddFunc: func(_ interface{}) {
 			s.notify()
 		},
-		UpdateFunc: func(_, _ interface{}) {
+		UpdateFunc: func(_, new interface{}) {
+			co := new.(CommonObject)
+			log.Printf("lan.notifyFuncs.update.co.name:%s, ns:%s, apiversion:%s kind:%s group:%s \n", co.Name, co.Namespace, co.APIVersion, co.Kind, co.GroupVersionKind().Group)
 			s.notify()
 		},
 		DeleteFunc: func(_ interface{}) {
