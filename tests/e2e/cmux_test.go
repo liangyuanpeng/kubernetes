@@ -133,6 +133,7 @@ func testConnectionMultiplexing(ctx context.Context, t *testing.T, member e2e.Et
 				assert.NoError(t, fetchMetrics(t, httpEndpoint, httpVersion, connType))
 				assert.NoError(t, fetchVersion(httpEndpoint, httpVersion, connType))
 				assert.NoError(t, fetchHealth(httpEndpoint, httpVersion, connType))
+				//TODO 完善测试,开启了debug这里就是noError 没开启debug 则是 error,  另外 添加pprof的http测试
 				assert.NoError(t, fetchDebugVars(httpEndpoint, httpVersion, connType))
 			})
 		}

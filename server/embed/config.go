@@ -381,6 +381,7 @@ type Config struct {
 	// ForceNewCluster starts a new cluster even if previously started; unsafe.
 	ForceNewCluster bool `json:"force-new-cluster"`
 
+	EnableDebug           bool   `json:"enable-debug"`
 	EnablePprof           bool   `json:"enable-pprof"`
 	Metrics               string `json:"metrics"`
 	ListenMetricsUrls     []url.URL
