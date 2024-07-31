@@ -19,6 +19,7 @@ package validating
 import (
 	"context"
 	"io"
+	"log"
 
 	v1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -87,6 +88,8 @@ var _ initializer.WantsExcludedAdmissionResources = &Plugin{}
 
 func NewPlugin(_ io.Reader) *Plugin {
 	handler := admission.NewHandler(admission.Connect, admission.Create, admission.Delete, admission.Update)
+
+	log.Println("lan.NewPlugin for validating...................")
 
 	return &Plugin{
 		Plugin: generic.NewPlugin(
