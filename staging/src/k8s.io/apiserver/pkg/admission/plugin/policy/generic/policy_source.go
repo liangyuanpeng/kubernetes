@@ -20,7 +20,6 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
-	"log"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -155,8 +154,9 @@ func (s *policySource[P, B, E]) Run(ctx context.Context) error {
 			s.notify()
 		},
 		UpdateFunc: func(_, new interface{}) {
-			co := new.(CommonObject)
-			log.Printf("lan.notifyFuncs.update.co.name:%s, ns:%s, apiversion:%s kind:%s group:%s \n", co.Name, co.Namespace, co.APIVersion, co.Kind, co.GroupVersionKind().Group)
+			klog.Info("lan.UpdateFunc", "type", "unknow")
+			// co := new.(CommonObject)
+			// log.Printf("lan.notifyFuncs.update.co.name:%s, ns:%s, apiversion:%s kind:%s group:%s \n", co.Name, co.Namespace, co.APIVersion, co.Kind, co.GroupVersionKind().Group)
 			s.notify()
 		},
 		DeleteFunc: func(_ interface{}) {
