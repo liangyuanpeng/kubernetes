@@ -257,6 +257,7 @@ func (c *controller[T]) reconcile(key string) error {
 	var name string
 	var lister NamespacedLister[T]
 
+	klog.Info("lan.vap.generic.", "key", key)
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err = cache.SplitMetaNamespaceKey(key)
 	if err != nil {
