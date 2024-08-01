@@ -154,11 +154,11 @@ func (s *policySource[P, B, E]) Run(ctx context.Context) error {
 			s.notify()
 		},
 		UpdateFunc: func(_, new interface{}) {
-			// co, err := meta.Accessor(new)
-			// if err != nil {
-			// 	klog.ErrorS(err, "lan.meta.obj to common failed!")
-			// }
-			klog.Info("lan.UpdateFunc", "type", "unknow")
+			co, err := meta.Accessor(new)
+			if err != nil {
+				klog.ErrorS(err, "lan.meta.obj to common failed!")
+			}
+			klog.Info("lan.UpdateFunc", "type", "unknow", "co", co.GetName())
 			// co := new.(CommonObject)
 			// log.Printf("lan.notifyFuncs.update.co.name:%s, ns:%s, apiversion:%s kind:%s group:%s \n", co.Name, co.Namespace, co.APIVersion, co.Kind, co.GroupVersionKind().Group)
 			s.notify()

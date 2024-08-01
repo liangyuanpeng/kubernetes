@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/admission"
 	"k8s.io/apiserver/pkg/admission/plugin/policy/matching"
+	"k8s.io/klog/v2"
 )
 
 // Matcher is used for matching ValidatingAdmissionPolicy and ValidatingAdmissionPolicyBinding to attributes
@@ -76,6 +77,9 @@ func (c *matcher) BindingMatches(a admission.Attributes, o admission.ObjectInter
 	if matchResources == nil {
 		return true, nil
 	}
+
+	//lan 应用deployment的时候到不了这里? 那么这里筛选的是已经被某一个VAP match的工作负载吗?
+	klog.Info("lan.BindingMatches", "attributes", a)
 
 	criteria := matchCriteria{constraints: matchResources}
 	isMatch, _, _, err := c.Matcher.Matches(a, o, &criteria)

@@ -18,7 +18,7 @@ spec:
     - key: "high-replica-count"
       valueExpression: "'audit StatefulSets spec.replicas set to ' + string(object.spec.replicas)"
   validations:
-  - expression: "object.spec.replicas > 20"
+  - expression: "object.spec.replicas < 10"
     messageExpression: "'StatefulSets spec.replicas set to ' + string(object.spec.replicas)"
   - expression: "!object.spec.template.spec.containers.exists_one(c, c.image.startsWith('registry.lank8s.cn/'))"
     message: "container image is not approve with start with registry.lank8s.cn"

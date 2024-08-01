@@ -1,15 +1,14 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   labels:
     app: tools
-  name: tools-sts
+  name: tools
 spec:
   selector:
     matchLabels: 
       app: tools
-  serviceName: tools-svc
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:
