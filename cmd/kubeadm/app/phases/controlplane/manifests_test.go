@@ -63,22 +63,34 @@ func TestGetStaticPodSpecs(t *testing.T) {
 	specs := GetStaticPodSpecs(cfg, &kubeadmapi.APIEndpoint{}, []kubeadmapi.EnvVar{})
 
 	var tests = []struct {
-		name          string
-		staticPodName string
-		env           []v1.EnvVar
+		name                 string
+		staticPodName        string
+		expectLivenessProbe  bool
+		expectReadinessProbe bool
+		expectStartupProbe   bool
+		env                  []v1.EnvVar
 	}{
 		{
-			name:          "KubeAPIServer",
-			staticPodName: kubeadmconstants.KubeAPIServer,
+			name:                 "KubeAPIServer",
+			staticPodName:        kubeadmconstants.KubeAPIServer,
+			expectLivenessProbe:  true,
+			expectReadinessProbe: true,
+			expectStartupProbe:   true,
 		},
 		{
-			name:          "KubeControllerManager",
-			staticPodName: kubeadmconstants.KubeControllerManager,
+			name:                 "KubeControllerManager",
+			staticPodName:        kubeadmconstants.KubeControllerManager,
+			expectLivenessProbe:  true,
+			expectReadinessProbe: false,
+			expectStartupProbe:   true,
 		},
 		{
-			name:          "KubeScheduler",
-			staticPodName: kubeadmconstants.KubeScheduler,
-			env:           []v1.EnvVar{{Name: "Foo", Value: "Bar"}},
+			name:                 "KubeScheduler",
+			staticPodName:        kubeadmconstants.KubeScheduler,
+			expectLivenessProbe:  true,
+			expectReadinessProbe: true,
+			expectStartupProbe:   true,
+			env:                  []v1.EnvVar{{Name: "Foo", Value: "Bar"}},
 		},
 	}
 
@@ -94,6 +106,16 @@ func TestGetStaticPodSpecs(t *testing.T) {
 					if !reflect.DeepEqual(spec.Spec.Containers[0].Env, tc.env) {
 						t.Errorf("expected env: %v, got: %v", tc.env, spec.Spec.Containers[0].Env)
 					}
+				}
+
+				if tc.expectLivenessProbe != (spec.Spec.Containers[0].LivenessProbe != nil) {
+					t.Errorf("expected livenssProbe: %v, got: %v", tc.expectLivenessProbe, (spec.Spec.Containers[0].LivenessProbe != nil))
+				}
+				if tc.expectReadinessProbe != (spec.Spec.Containers[0].ReadinessProbe != nil) {
+					t.Errorf("expected readinessProbe: %v, got: %v", tc.expectLivenessProbe, (spec.Spec.Containers[0].ReadinessProbe != nil))
+				}
+				if tc.expectStartupProbe != (spec.Spec.Containers[0].LivenessProbe != nil) {
+					t.Errorf("expected startupProbe: %v, got: %v", tc.expectStartupProbe, (spec.Spec.Containers[0].StartupProbe != nil))
 				}
 			} else {
 				t.Errorf("getStaticPodSpecs didn't create spec for %s ", tc.staticPodName)
