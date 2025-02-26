@@ -44,6 +44,7 @@ import (
 	kubepodtest "k8s.io/kubernetes/pkg/kubelet/pod/testing"
 	serverstats "k8s.io/kubernetes/pkg/kubelet/server/stats"
 	"k8s.io/kubernetes/pkg/volume"
+	"k8s.io/kubernetes/test/utils/ktesting"
 )
 
 const (
@@ -335,11 +336,11 @@ func TestCRIListPodStats(t *testing.T) {
 }
 
 func TestListPodStatsStrictlyFromCRI(t *testing.T) {
+	tCtx := ktesting.Init(t)
 	if runtime.GOOS == "windows" {
 		// TODO: remove skip once the failing test has been fixed.
 		t.Skip("Skip failing test on Windows.")
 	}
-	ctx := context.Background()
 	var (
 		imageFsMountpoint = "/test/mount/point"
 		unknownMountpoint = "/unknown/mount/point"
@@ -467,11 +468,11 @@ func TestListPodStatsStrictlyFromCRI(t *testing.T) {
 		true,
 	)
 
-	cadvisorInfos, err := getCadvisorContainerInfo(mockCadvisor)
+	cadvisorInfos, err := getCadvisorContainerInfo(tCtx, mockCadvisor)
 	if err != nil {
 		t.Errorf("failed to get container info from cadvisor: %v", err)
 	}
-	stats, err := provider.ListPodStats(ctx)
+	stats, err := provider.ListPodStats(tCtx)
 	assert := assert.New(t)
 	assert.NoError(err)
 	assert.Len(stats, 2)
