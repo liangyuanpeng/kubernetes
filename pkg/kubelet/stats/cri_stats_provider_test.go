@@ -1107,6 +1107,7 @@ func makeFakeLogStats(seed int) *volume.Metrics {
 }
 
 func TestGetContainerUsageNanoCores(t *testing.T) {
+	tCtx := ktesting.Init(t)
 	var value0 uint64
 	var value1 uint64 = 10000000000
 
@@ -1269,7 +1270,7 @@ func TestGetContainerUsageNanoCores(t *testing.T) {
 		assert.Nil(t, cached)
 
 		// Update the cache and get the latest value.
-		real := provider.getAndUpdateContainerUsageNanoCores(test.stats)
+		real := provider.getAndUpdateContainerUsageNanoCores(tCtx,test.stats)
 		assert.Equal(t, test.expected, real, test.desc)
 
 		// After the update, the cached value should be up-to-date

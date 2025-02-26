@@ -206,11 +206,11 @@ func (p *criStatsProvider) listPodStatsPartiallyFromCRI(ctx context.Context, upd
 		}
 
 		// Fill available stats for full set of required pod stats
-		cs, err := p.makeContainerStats(stats, container, rootFsInfo, fsIDtoInfo, podSandbox.GetMetadata(), updateCPUNanoCoreUsage)
+		cs, err := p.makeContainerStats(ctx, stats, container, rootFsInfo, fsIDtoInfo, podSandbox.GetMetadata(), updateCPUNanoCoreUsage)
 		if err != nil {
 			return nil, fmt.Errorf("make container stats: %w", err)
 		}
-		p.addPodNetworkStats(ps, podSandboxID, caInfos, cs, containerNetworkStats[podSandboxID])
+		p.addPodNetworkStats(logger, ps, podSandboxID, caInfos, cs, containerNetworkStats[podSandboxID])
 		p.addPodCPUMemoryStats(ps, types.UID(podSandbox.Metadata.Uid), allInfos, cs)
 		p.addSwapStats(ps, types.UID(podSandbox.Metadata.Uid), allInfos, cs)
 
@@ -256,7 +256,7 @@ func (p *criStatsProvider) listPodStatsStrictlyFromCRI(ctx context.Context, upda
 			continue
 		}
 		ps := buildPodStats(podSandbox)
-		if err := p.addCRIPodContainerStats(criSandboxStat, ps, fsIDtoInfo, containerMap, podSandbox, rootFsInfo, updateCPUNanoCoreUsage); err != nil {
+		if err := p.addCRIPodContainerStats(ctx, criSandboxStat, ps, fsIDtoInfo, containerMap, podSandbox, rootFsInfo, updateCPUNanoCoreUsage); err != nil {
 			return nil, fmt.Errorf("add CRI pod container stats: %w", err)
 		}
 		addCRIPodNetworkStats(ps, criSandboxStat)
@@ -488,6 +488,7 @@ func buildPodStats(podSandbox *runtimeapi.PodSandbox) *statsapi.PodStats {
 }
 
 func (p *criStatsProvider) addPodNetworkStats(
+	logger klog.Logger,
 	ps *statsapi.PodStats,
 	podSandboxID string,
 	caInfos map[string]cadvisorapiv2.ContainerInfo,
@@ -510,7 +511,6 @@ func (p *criStatsProvider) addPodNetworkStats(
 		return
 	}
 
-	logger := klog.FromContext(context.TODO())
 	// TODO: sum Pod network stats from container stats.
 	logger.V(4).Info("Unable to find network stats for sandbox", "sandboxID", podSandboxID)
 }
@@ -599,6 +599,7 @@ func (p *criStatsProvider) addProcessStats(
 }
 
 func (p *criStatsProvider) makeContainerStats(
+	ctx context.Context,
 	stats *runtimeapi.ContainerStats,
 	container *runtimeapi.Container,
 	rootFsInfo *cadvisorapiv2.FsInfo,
@@ -616,9 +617,7 @@ func (p *criStatsProvider) makeContainerStats(
 		Swap:      &statsapi.SwapStats{},
 		// UserDefinedMetrics is not supported by CRI.
 	}
-	// Use context.TODO() because we currently do not have a proper context to pass in.
-	// Replace this with an appropriate context when refactoring this function to accept a context parameter.
-	ctx := context.TODO()
+	logger := klog.FromContext(ctx)
 	if stats.Cpu != nil {
 		result.CPU.Time = metav1.NewTime(time.Unix(0, stats.Cpu.Timestamp))
 		if stats.Cpu.UsageCoreNanoSeconds != nil {
@@ -626,7 +625,7 @@ func (p *criStatsProvider) makeContainerStats(
 		}
 		var usageNanoCores *uint64
 		if updateCPUNanoCoreUsage {
-			usageNanoCores = p.getAndUpdateContainerUsageNanoCores(stats)
+			usageNanoCores = p.getAndUpdateContainerUsageNanoCores(ctx, stats)
 		} else {
 			usageNanoCores = p.getContainerUsageNanoCores(stats)
 		}
@@ -674,9 +673,6 @@ func (p *criStatsProvider) makeContainerStats(
 	if fsID != nil {
 		imageFsInfo, found := fsIDtoInfo[*fsID]
 		if !found {
-			// Use context.TODO() because we currently do not have a proper context to pass in.
-			// Replace this with an appropriate context when refactoring this function to accept a context parameter.
-			ctx := context.TODO()
 			imageFsInfo, err = p.getFsInfo(ctx, fsID)
 			if err != nil {
 				return nil, fmt.Errorf("get filesystem info: %w", err)
@@ -698,7 +694,6 @@ func (p *criStatsProvider) makeContainerStats(
 	// using old log path, empty log stats are returned. This is fine, because we don't
 	// officially support in-place upgrade anyway.
 	result.Logs, err = p.hostStatsProvider.getPodContainerLogStats(meta.GetNamespace(), meta.GetName(), types.UID(meta.GetUid()), container.GetMetadata().GetName(), rootFsInfo)
-	logger := klog.FromContext(ctx)
 	if err != nil {
 		logger.Error(err, "Unable to fetch container log stats", "containerName", container.GetMetadata().GetName())
 	}
@@ -772,7 +767,7 @@ func (p *criStatsProvider) getContainerUsageNanoCores(stats *runtimeapi.Containe
 // getAndUpdateContainerUsageNanoCores first attempts to get the usage nano cores from the stats reported
 // by the CRI. If it is unable to, it computes usageNanoCores based on the given and the cached usageCoreNanoSeconds,
 // updates the cache with the computed usageNanoCores, and returns the usageNanoCores.
-func (p *criStatsProvider) getAndUpdateContainerUsageNanoCores(stats *runtimeapi.ContainerStats) *uint64 {
+func (p *criStatsProvider) getAndUpdateContainerUsageNanoCores(ctx context.Context, stats *runtimeapi.ContainerStats) *uint64 {
 	if stats == nil || stats.Attributes == nil || stats.Cpu == nil {
 		return nil
 	}
@@ -784,6 +779,7 @@ func (p *criStatsProvider) getAndUpdateContainerUsageNanoCores(stats *runtimeapi
 	if stats.Cpu.UsageCoreNanoSeconds == nil {
 		return nil
 	}
+	logger := klog.FromContext(ctx)
 	id := stats.Attributes.Id
 	usage, err := func() (*uint64, error) {
 		p.mutex.Lock()
@@ -813,7 +809,6 @@ func (p *criStatsProvider) getAndUpdateContainerUsageNanoCores(stats *runtimeapi
 	}()
 
 	if err != nil {
-		logger := klog.FromContext(context.TODO())
 		// This should not happen. Log now to raise visibility
 		logger.Error(err, "Failed updating cpu usage nano core")
 	}

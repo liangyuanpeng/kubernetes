@@ -125,6 +125,11 @@ func (p *criStatsProvider) makeWinContainerStats(
 		Rootfs:    &statsapi.FsStats{},
 		// UserDefinedMetrics is not supported by CRI.
 	}
+
+	// Use context.TODO() because we currently do not have a proper context to pass in.
+	// Replace this with an appropriate context when refactoring this function to accept a context parameter.
+	ctx := context.TODO()
+	logger := klog.FromContext(ctx)
 	if stats.Cpu != nil {
 		result.CPU.Time = metav1.NewTime(time.Unix(0, stats.Cpu.Timestamp))
 		if stats.Cpu.UsageCoreNanoSeconds != nil {
@@ -166,9 +171,6 @@ func (p *criStatsProvider) makeWinContainerStats(
 	if fsID != nil {
 		imageFsInfo, found := fsIDtoInfo[*fsID]
 		if !found {
-			// Use context.TODO() because we currently do not have a proper context to pass in.
-			// Replace this with an appropriate context when refactoring this function to accept a context parameter.
-			ctx := context.TODO()
 			imageFsInfo, err = p.getFsInfo(ctx, fsID)
 			if err != nil {
 				return nil, fmt.Errorf("get filesystem info: %w", err)
@@ -188,7 +190,6 @@ func (p *criStatsProvider) makeWinContainerStats(
 	// using old log path, empty log stats are returned. This is fine, because we don't
 	// officially support in-place upgrade anyway.
 	result.Logs, err = p.hostStatsProvider.getPodContainerLogStats(meta.GetNamespace(), meta.GetName(), types.UID(meta.GetUid()), container.GetMetadata().GetName(), rootFsInfo)
-	logger := klog.FromContext(context.TODO())
 	if err != nil {
 		logger.Error(err, "Unable to fetch container log stats", "containerName", container.GetMetadata().GetName())
 	}
