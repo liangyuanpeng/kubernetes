@@ -83,7 +83,13 @@ jobs:
         fetch-depth: 0
     - name: run
       run: |
-        curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz | tar xvfz - -C "${PATH%%:*}/" && e2e-k8s.sh
+        export ARCH_NAME=`uname -m`
+        if [ "$ARCH_NAME" != "x86_64" ];then
+          curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz | tar xvfz - -C "${PATH%%:*}/" && e2e-k8s.sh
+        else
+          curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz | tar xvfz - -C "${PATH%%:*}/" && e2e-k8s.sh
+        fi
+        
     # - name: run
     #   run: |
     #     wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
