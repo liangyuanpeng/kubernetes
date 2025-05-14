@@ -45,7 +45,7 @@ jobs:
         fetch-depth: 0
     - name: run
       run: |
-        make quick-release-images KUBE_EXTRA_WHAT="cmd/kube-apiserver"
+        make quick-release-images KUBE_EXTRA_WHAT="cmd/kube-apiserver" WHAT=kube-apiserver
         docker images
         ls _output
         echo "======================="
