@@ -65,6 +65,35 @@ jobs:
         docker images
         
 
+  buildnode:
+    name: build-node-arm
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - name: checkoutactions
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: run
+      shell: bash
+      run: |
+        export ARCH_NAME=`uname -m`
+        if [ "$ARCH_NAME" != "x86_64" ];then
+          wget https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz
+          tar -xf linux-arm64.tgz
+          ls
+          chmod +x kind && mv kind /usr/local/bin/kind
+          IMGTAG=`git describe --tags`
+          kind build node-image --image ghcr.io/liangyuanpeng/kubernetes:kindnode-${IMGTAG} -v1
+        else
+          wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
+          tar -xf linux-amd64.tgz
+          ls
+          chmod +x kind && mv kind /usr/local/bin/kind
+          chmod +x e2e-k8s.sh
+          ./e2e-k8s.sh
+          #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz | tar xvfz - -C "${PATH%%:*}/" && e2e-k8s.sh
+        fi
+
   testarm:
     name: simpletest-arm
     strategy:
