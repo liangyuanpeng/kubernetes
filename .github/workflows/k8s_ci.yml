@@ -60,6 +60,7 @@ jobs:
         docker load -i _output/release-images/arm64/kube-apiserver.tar
         rm -f _output/release-images/arm64/kube-apiserver.tar
         docker images
+        cat _output/release-stage/server/linux-arm64/kubernetes/server/bin/kube-apiserver.docker_tag
 
   testarm:
     name: simpletest-arm
