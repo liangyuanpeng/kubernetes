@@ -84,6 +84,7 @@ jobs:
           chmod +x kind && mv kind /usr/local/bin/kind
           IMGTAG=`git describe --tags`
           kind build node-image --image ghcr.io/liangyuanpeng/kubernetes:kindnode-${IMGTAG} -v1
+          docker images
         else
           wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
           tar -xf linux-amd64.tgz
