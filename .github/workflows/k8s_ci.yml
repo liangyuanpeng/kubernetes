@@ -1,0 +1,88 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+name: k8s_ci
+on:
+  push:
+    branches: [ mvp ]
+  
+env:
+  GH_TOKEN: ${{ github.token }}
+  GOFLAGS: "-p=2"
+  
+jobs:
+
+  testarm:
+    name: simpletest-arm
+    strategy:
+      max-parallel: 6
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04-arm
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: run
+      run: |
+        wget -q https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz
+        tar -xf linux-arm64.tgz
+        ./kind create cluster
+        kubectl get pod -A
+        kubectl get node 
+        kubectl wait --timeout=1m --for=condition=ready pods --namespace=kube-system
+        echo "===========================finish waiting for kube-system pods==========================="
+        kubectl get pod -A
+        kubectl get node -A
+        # TODO 创建多集群
+        #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz | tar xvfz - -C "${PATH%%:*}/"
+
+    - name: export logs
+      if: always()
+      run: |
+        docker ps -a
+        kind export logs /tmp/kind
+        cp kind-ci.yaml /tmp/kind/
+
+        ls
+        mv e2e.log _artifacts/testreport/
+        mv junit_01.xml _artifacts/testreport/
+
+        echo "==============================================begin cat e2e.log =============================================="
+        touch _artifacts/testreport/e2e.log
+        cat _artifacts/testreport/e2e.log
+        echo "==============================================done cat e2e.log =============================================="
+
+        sudo chmod -R 777 _artifacts
+
+        kubectl get pod -A
+
+    - name: upload kind logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: hydrophone_logs
+        path: /tmp/kind/
+
+    - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+      if: always()
+      with:
+        name: hydrophone_testreport
+        path: _artifacts/testreport
+
