@@ -82,6 +82,7 @@ jobs:
       with:
         fetch-depth: 0
     - name: run
+      shell: bash
       run: |
         export ARCH_NAME=`uname -m`
         if [ "$ARCH_NAME" != "x86_64" ];then
