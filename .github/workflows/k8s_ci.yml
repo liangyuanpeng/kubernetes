@@ -51,6 +51,8 @@ jobs:
         echo "===========================finish waiting for kube-system pods==========================="
         kubectl get pod -A
         kubectl get node -A
+        chmod +x e2e-k8s.sh
+        ./e2e-k8s.sh
         # TODO 创建多集群
         #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz | tar xvfz - -C "${PATH%%:*}/"
 
