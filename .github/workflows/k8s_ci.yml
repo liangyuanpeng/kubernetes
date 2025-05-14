@@ -45,7 +45,7 @@ jobs:
         fetch-depth: 0
     - name: run
       run: |
-        make quick-release-images KUBE_EXTRA_WHAT="cmd/kube-apiserver" WHAT=cmd/kube-apiserver
+        WHAT=cmd/kube-apiserver make quick-release-images WHAT=cmd/kube-apiserver
         docker images
         ls _output
         echo "======================="
@@ -55,6 +55,7 @@ jobs:
         echo "======================="
         tree _output
         echo "======================="
+        ls _output/release-stage/server/linux-arm64/kubernetes/server/bin
         cat _output/release-stage/server/linux-arm64/kubernetes/server/bin/kube-apiserver.docker_tag
         echo "======================="
         rm -rf _output/dockerized
