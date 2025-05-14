@@ -55,6 +55,7 @@ jobs:
         echo "===========================finish waiting for kube-system pods==========================="
         kubectl get pod -A
         kubectl get node -A
+        kind delete cluster
         chmod +x e2e-k8s.sh
         ./e2e-k8s.sh
         # TODO 创建多集群
