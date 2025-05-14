@@ -95,38 +95,39 @@ jobs:
         kind delete cluster
         chmod +x e2e-k8s.sh
         ./e2e-k8s.sh
+        tree .
         # TODO 创建多集群
         #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz | tar xvfz - -C "${PATH%%:*}/"
 
-    - name: export logs
-      if: always()
-      run: |
-        docker ps -a
-        kind export logs /tmp/kind
+    # - name: export logs
+    #   if: always()
+    #   run: |
+    #     docker ps -a
+    #     kind export logs /tmp/kind
 
-        ls
-        mv e2e.log _artifacts/testreport/
-        mv junit_01.xml _artifacts/testreport/
+    #     ls
+    #     mv e2e.log _artifacts/testreport/
+    #     mv junit_01.xml _artifacts/testreport/
 
-        echo "==============================================begin cat e2e.log =============================================="
-        touch _artifacts/testreport/e2e.log
-        cat _artifacts/testreport/e2e.log
-        echo "==============================================done cat e2e.log =============================================="
+    #     echo "==============================================begin cat e2e.log =============================================="
+    #     touch _artifacts/testreport/e2e.log
+    #     cat _artifacts/testreport/e2e.log
+    #     echo "==============================================done cat e2e.log =============================================="
 
-        sudo chmod -R 777 _artifacts
+    #     sudo chmod -R 777 _artifacts
 
-        kubectl get pod -A
+    #     kubectl get pod -A
 
-    - name: upload kind logs
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: hydrophone_logs
-        path: /tmp/kind/
+    # - name: upload kind logs
+    #   if: always()
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: hydrophone_logs
+    #     path: /tmp/kind/
 
-    - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
-      if: always()
-      with:
-        name: hydrophone_testreport
-        path: _artifacts/testreport
+    # - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+    #   if: always()
+    #   with:
+    #     name: hydrophone_testreport
+    #     path: _artifacts/testreport
 
