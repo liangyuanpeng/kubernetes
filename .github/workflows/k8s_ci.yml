@@ -68,11 +68,19 @@ jobs:
   buildnode:
     name: build-node-arm
     runs-on: ubuntu-24.04-arm
+    permissions:
+      packages: write
     steps:
     - name: checkoutactions
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    - name: Login to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: $GITHUB_REPOSITORY_OWNER
+        password: ${{ secrets.GITHUB_TOKEN }}
     - name: run
       shell: bash
       run: |
@@ -85,6 +93,7 @@ jobs:
           IMGTAG=`git describe --tags`
           kind build node-image --image ghcr.io/liangyuanpeng/kubernetes:kindnode-${IMGTAG} -v1
           docker images
+          docker push ghcr.io/liangyuanpeng/kubernetes:kindnode-${IMGTAG}
         else
           wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
           tar -xf linux-amd64.tgz
