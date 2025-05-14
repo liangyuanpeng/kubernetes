@@ -88,6 +88,7 @@ jobs:
         if [ "$ARCH_NAME" != "x86_64" ];then
           wget https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz
           tar -xf linux-arm64.tgz
+          ls
           chmod +x kind-linux-arm64 && mv kind-linux-arm64 /usr/local/bin/kind
           chmod +x e2e-k8s.sh
           ./e2e-k8s.sh
@@ -95,6 +96,7 @@ jobs:
         else
           wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
           tar -xf linux-amd64.tgz
+          ls
           chmod +x kind-linux-amd64 && mv kind-linux-amd64 /usr/local/bin/kind
           chmod +x e2e-k8s.sh
           ./e2e-k8s.sh
