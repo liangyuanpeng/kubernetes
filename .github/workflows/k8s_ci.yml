@@ -46,7 +46,7 @@ jobs:
         ./kind create cluster
         kubectl get pod -A
         kubectl get node 
-        kubectl wait --timeout=1m --for=condition=ready pods --namespace=kube-system
+        kubectl wait --timeout=1m --for=condition=ready pods --namespace=kube-system --all
         echo "===========================finish waiting for kube-system pods==========================="
         kubectl get pod -A
         kubectl get node -A
