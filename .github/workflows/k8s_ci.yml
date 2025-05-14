@@ -83,21 +83,26 @@ jobs:
         fetch-depth: 0
     - name: run
       run: |
-        curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz | tar xvfz - -C "${PATH%%:*}/"
-        ls
-        kind create cluster
-        kubectl get pod -A
-        kubectl get node 
-        kubectl wait --timeout=1m --for=condition=ready pods --namespace=kube-system --all
-        echo "===========================finish waiting for kube-system pods==========================="
-        kubectl get pod -A
-        kubectl get node -A
-        kind delete cluster
-        chmod +x e2e-k8s.sh
-        e2e-k8s.sh
-        tree .
-        # TODO 创建多集群
-        #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz | tar xvfz - -C "${PATH%%:*}/"
+        curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz | tar xvfz - -C "${PATH%%:*}/" && e2e-k8s.sh
+    # - name: run
+    #   run: |
+    #     wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
+    #     tar -xf linux-amd64.tgz
+    #     chmod +x 
+    #     ls
+    #     kind create cluster
+    #     kubectl get pod -A
+    #     kubectl get node 
+    #     kubectl wait --timeout=1m --for=condition=ready pods --namespace=kube-system --all
+    #     echo "===========================finish waiting for kube-system pods==========================="
+    #     kubectl get pod -A
+    #     kubectl get node -A
+    #     kind delete cluster
+    #     chmod +x e2e-k8s.sh
+    #     e2e-k8s.sh
+    #     tree .
+    #     # TODO 创建多集群
+    #     #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz | tar xvfz - -C "${PATH%%:*}/"
 
     # - name: export logs
     #   if: always()
