@@ -67,7 +67,14 @@ jobs:
 
   buildnode:
     name: build-node-arm
-    runs-on: ubuntu-24.04-arm
+    strategy:
+      max-parallel: 6
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04-arm
+          - ubuntu-24.04
+    runs-on: ${{ matrix.os }}
     permissions:
       packages: write
     steps:
