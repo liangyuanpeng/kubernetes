@@ -114,8 +114,8 @@ jobs:
         fi
 
 
-  testarm:
-    name: simpletest-arm
+  test:
+    name: test
     strategy:
       max-parallel: 6
       fail-fast: false
