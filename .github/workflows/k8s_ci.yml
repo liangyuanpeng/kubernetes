@@ -93,16 +93,19 @@ jobs:
           IMGTAG=`git describe --tags`
           kind build node-image --image ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 -v1
           docker images
-          docker push ghcr.io/liangyuanpeng/kuberneteskindnode:${IMGTAG}-arm64
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64
         else
           wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
           tar -xf linux-amd64.tgz
           ls
           chmod +x kind && mv kind /usr/local/bin/kind
           chmod +x e2e-k8s.sh
-          ./e2e-k8s.sh
-          #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz | tar xvfz - -C "${PATH%%:*}/" && e2e-k8s.sh
+          IMGTAG=`git describe --tags`
+          kind build node-image --image ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 -v1
+          docker images
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64
         fi
+
 
   testarm:
     name: simpletest-arm
