@@ -92,6 +92,7 @@ jobs:
       shell: bash
       run: |
         export ARCH_NAME=`uname -m`
+        COMMITID=`git rev-parse --short HEAD`
         if [ "$ARCH_NAME" != "x86_64" ];then
           wget https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz
           tar -xf linux-arm64.tgz
@@ -101,6 +102,11 @@ jobs:
           kind build node-image --image ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 -v1
           docker images
           docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-arm64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-arm64
+
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-arm64
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-arm64
         else
           wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
           tar -xf linux-amd64.tgz
@@ -111,8 +117,12 @@ jobs:
           kind build node-image --image ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 -v1
           docker images
           docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64
-        fi
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-amd64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-amd64
 
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-amd64
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-amd64
+        fi
 
   test:
     name: test
