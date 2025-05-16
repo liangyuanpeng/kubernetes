@@ -143,6 +143,9 @@ jobs:
     - name: run
       shell: bash
       run: |
+        git tag -l > tags.log 
+        cat tags.log
+        git describe --tags
         export ARCH_NAME=`uname -m`
         if [ "$ARCH_NAME" != "x86_64" ];then
           wget https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz
