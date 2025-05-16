@@ -168,7 +168,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: e2elogs
+        name: e2elogs_${{ matrix.os }}
         path: _artifacts
 
     # - name: run
