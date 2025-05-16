@@ -144,7 +144,6 @@ jobs:
       shell: bash
       run: |
         git tag -l > tags.log 
-        cat tags.log
         git describe --tags
         export ARCH_NAME=`uname -m`
         if [ "$ARCH_NAME" != "x86_64" ];then
