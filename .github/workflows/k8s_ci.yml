@@ -65,7 +65,7 @@ jobs:
         
 
   buildnode:
-    name: build-node-arm
+    name: build-node
     strategy:
       max-parallel: 6
       fail-fast: false
