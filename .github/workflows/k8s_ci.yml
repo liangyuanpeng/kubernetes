@@ -163,7 +163,14 @@ jobs:
           ./e2e-k8s.sh
           #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz | tar xvfz - -C "${PATH%%:*}/" && e2e-k8s.sh
         fi
-        
+
+    - name: upload test logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2elogs
+        path: _artifacts
+
     # - name: run
     #   run: |
     #     wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
