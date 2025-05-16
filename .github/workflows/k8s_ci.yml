@@ -107,6 +107,16 @@ jobs:
 
           docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-arm64
           docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-arm64
+
+          ls _output
+          echo "======================="
+          ls _output/release-images
+          echo "======================="
+          ls _output/images
+          echo "======================="
+          tree _output
+          echo "======================="
+
         else
           wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
           tar -xf linux-amd64.tgz
