@@ -104,6 +104,7 @@ jobs:
           docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64
           docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-arm64
           docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-arm64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp
 
           docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-arm64
           docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-arm64
@@ -129,10 +130,32 @@ jobs:
           docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64
           docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-amd64
           docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-amd64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp
 
           docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-amd64
           docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-amd64
         fi
+
+        kind create cluster --config .github/workflows/kind.yml --retain -v9
+
+    - name: run
+      shell: bash
+      run: |
+        kubectl get pod -A 
+        kubectl apply -f .github/workflows/demo.yaml
+        kubectl apply -f .github/workflows/deploy.yaml
+
+    - name: check artifacts
+      if: always()
+      run: |
+        mkdir -p _artifacts
+        ls _artifacts
+
+    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3
+      if: always()
+      with:
+        name: test_mvp_${{ matrix.os }}
+        path: _artifacts
 
   test:
     name: test
