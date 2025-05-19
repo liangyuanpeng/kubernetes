@@ -18,9 +18,10 @@ package patch
 
 import (
 	"context"
-	"github.com/google/go-cmp/cmp"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -36,6 +37,8 @@ import (
 	"k8s.io/utils/ptr"
 )
 
+// lan test: go test -timeout 30s -run ^TestJSONPatch$ k8s.io/apiserver/pkg/admission/plugin/policy/mutating/patch -v
+
 func TestJSONPatch(t *testing.T) {
 	deploymentGVR := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
 	tests := []struct {
@@ -46,6 +49,15 @@ func TestJSONPatch(t *testing.T) {
 		expectedResult    runtime.Object
 		expectedErr       string
 	}{
+		{
+			name: "mypatch",
+			expression: `[
+						JSONPatch{op: "add", path: "/spec/template/spec/containers/-", value: {"name": "mesh-proxy","image":"mesh-proxy/v1.0.0"} }, 
+					]`,
+			gvr:            deploymentGVR,
+			object:         &appsv1.Deployment{Spec: appsv1.DeploymentSpec{Replicas: ptr.To[int32](1), Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "tools", Image: "mesh-proxy/v1.0.0"}}}}}},
+			expectedResult: &appsv1.Deployment{Spec: appsv1.DeploymentSpec{Replicas: ptr.To[int32](1), Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "tools", Image: "mesh-proxy/v1.0.0"}, {Name: "mesh-proxy", Image: "mesh-proxy/v1.0.0"}}}}}},
+		},
 		{
 			name: "jsonPatch with false test operation",
 			expression: `[

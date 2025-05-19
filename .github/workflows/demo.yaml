@@ -1,0 +1,64 @@
+apiVersion: admissionregistration.k8s.io/v1alpha1
+kind: MutatingAdmissionPolicy
+metadata:
+  name:  demo
+spec:
+  matchConstraints:
+    resourceRules:
+    - apiGroups:   ["apps"]
+      apiVersions: ["v1"]
+      operations:  ["CREATE", "UPDATE"]
+      resources:    ["deployments"]
+  matchConditions:
+    - name: does-not-already-have-sidecar
+      expression: "!has(object.spec.template.spec.initContainers) || !object.spec.template.spec.initContainers.exists(ic, ic.name == \"mesh-proxy\")"
+  failurePolicy: Fail
+  reinvocationPolicy: IfNeeded
+  mutations:
+    - patchType: "JSONPatch"
+      jsonPatch:
+        expression: >
+          [
+            JSONPatch{
+              op: "add", path: "/spec/template/spec/containers/-",
+              value: {
+                "name": "mesh-proxy",
+                "image": "mesh-proxy/v1.0.0"
+              }
+            }
+          ]  
+    # - patchType: "ApplyConfiguration"
+    #   applyConfiguration:
+    #     expression: >
+    #       Object{
+    #         spec: Object.spec{
+    #           template: Object.spec.template{
+    #             spec: Object.spec.template.spec{
+    #               initContainers: [
+    #                 Object.spec.template.spec.initContainers{
+    #                   name: "mesh-proxy",
+    #                   image: "mesh/proxy:v1.0.0",
+    #                   restartPolicy: "Always"
+    #                 }
+    #               ]
+    #             }
+    #           }
+    #         }
+    #       }
+---
+apiVersion: admissionregistration.k8s.io/v1alpha1
+kind: MutatingAdmissionPolicyBinding
+metadata:
+  name: demo
+spec:
+  policyName: demo
+  # validationActions: [Deny]
+  matchResources:
+    resourceRules:
+    - apiGroups: ["apps"]
+      apiVersions: ["v1"]
+      operations:  ["CREATE", "UPDATE"]
+      resources: ["deployments"]
+# 报错 The Deployment "tools" is invalid: spec.template.spec.containers[2].name: Duplicate value: "mesh-proxy"
+# kubectl patch deployment tools  --namespace default  -p='{"spec":{"template":"spec":{"containers"}}}'
+# kubectl patch deployment tools  --namespace default --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/-", "value": {"name": "mesh-proxy","image":"mesh-proxy/v1.0.0"} }]'

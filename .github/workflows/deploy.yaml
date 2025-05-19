@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: tools
+  name: tools
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: tools
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: tools
+    spec:
+      containers:
+        - name: tools
+          image: registry.cn-hongkong.aliyuncs.com/smartoilets/ubuntu:smtci-2404
+          command:
+            - /bin/sh
+            - -c
+            - sleep 9999
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 250m
+
