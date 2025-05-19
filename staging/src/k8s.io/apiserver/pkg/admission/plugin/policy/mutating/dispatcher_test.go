@@ -18,9 +18,10 @@ package mutating
 
 import (
 	"context"
-	"github.com/google/go-cmp/cmp"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/api/admissionregistration/v1alpha1"
@@ -42,6 +43,7 @@ import (
 	"k8s.io/utils/ptr"
 )
 
+// lan test: go test -timeout 30s -run ^TestDispatcher$ k8s.io/apiserver/pkg/admission/plugin/policy/mutating -v
 func TestDispatcher(t *testing.T) {
 	deploymentGVK := schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"}
 	deploymentGVR := schema.GroupVersionResource{Group: "apps", Version: "v1", Resource: "deployments"}
@@ -54,6 +56,86 @@ func TestDispatcher(t *testing.T) {
 		policyHooks       []PolicyHook
 		expect            runtime.Object
 	}{
+		// {
+		// 	name: "mypatch",
+		// 	gvk:  deploymentGVK,
+		// 	gvr:  deploymentGVR,
+		// 	object: &appsv1.Deployment{
+		// 		TypeMeta: metav1.TypeMeta{
+		// 			Kind:       "Deployment",
+		// 			APIVersion: "apps/v1",
+		// 		},
+		// 		ObjectMeta: metav1.ObjectMeta{
+		// 			Name:      "d1",
+		// 			Namespace: "default",
+		// 		},
+		// 		Spec: appsv1.DeploymentSpec{
+		// 			Replicas: ptr.To[int32](1),
+		// 			Template: corev1.PodTemplateSpec{
+		// 				Spec: corev1.PodSpec{
+		// 					Volumes: []corev1.Volume{{Name: "x"}},
+		// 				},
+		// 			},
+		// 		}},
+		// 	policyHooks: []generic.PolicyHook[*Policy, *PolicyBinding, PolicyEvaluator]{
+		// 		{
+		// 			Policy: mutations(matchConstraints(policy("policy0"), &v1alpha1.MatchResources{
+		// 				MatchPolicy:       ptr.To(v1alpha1.Equivalent),
+		// 				NamespaceSelector: &metav1.LabelSelector{},
+		// 				ObjectSelector:    &metav1.LabelSelector{},
+		// 				ResourceRules: []v1alpha1.NamedRuleWithOperations{
+		// 					{
+		// 						RuleWithOperations: v1alpha1.RuleWithOperations{
+		// 							Rule: v1alpha1.Rule{
+		// 								APIGroups:   []string{"apps"},
+		// 								APIVersions: []string{"v1"},
+		// 								Resources:   []string{"deployments"},
+		// 							},
+		// 							Operations: []admissionregistrationv1.OperationType{"*"},
+		// 						},
+		// 					},
+		// 				},
+		// 			}), v1alpha1.Mutation{
+		// 				PatchType: v1alpha1.PatchTypeApplyConfiguration,
+		// 				ApplyConfiguration: &v1alpha1.ApplyConfiguration{
+		// 					Expression: `Object{
+		// 									spec: Object.spec{
+		// 									initContainers: [
+		// 										Object.spec.initContainers{
+		// 										name: "mesh-proxy",
+		// 										image: "mesh/proxy:v1.0.0",
+		// 										args: ["proxy", "sidecar"],
+		// 										restartPolicy: "Always"
+		// 										}
+		// 									]
+		// 									}
+		// 								} `,
+		// 				}}),
+		// 			Bindings: []*PolicyBinding{{
+		// 				ObjectMeta: metav1.ObjectMeta{Name: "binding"},
+		// 				Spec: v1alpha1.MutatingAdmissionPolicyBindingSpec{
+		// 					PolicyName: "policy0",
+		// 				},
+		// 			}},
+		// 		},
+		// 	},
+		// 	expect: &appsv1.Deployment{
+		// 		ObjectMeta: metav1.ObjectMeta{
+		// 			Name:      "d1",
+		// 			Namespace: "default",
+		// 		},
+		// 		Spec: appsv1.DeploymentSpec{
+		// 			Replicas: ptr.To[int32](101),
+		// 			Template: corev1.PodTemplateSpec{
+		// 				Spec: corev1.PodSpec{
+		// 					Volumes: []corev1.Volume{{Name: "x"}},
+		// 				},
+		// 			},
+		// 			Strategy: appsv1.DeploymentStrategy{
+		// 				Type: appsv1.RollingUpdateDeploymentStrategyType,
+		// 			},
+		// 		}},
+		// },
 		{
 			name: "simple patch",
 			gvk:  deploymentGVK,

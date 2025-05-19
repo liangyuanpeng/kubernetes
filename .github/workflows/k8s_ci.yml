@@ -1,0 +1,327 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+name: k8s_ci
+on:
+  push:
+    branches: [ mvp ]
+  
+env:
+  GH_TOKEN: ${{ github.token }}
+  GOFLAGS: "-p=2"
+  
+jobs:
+
+  build:
+    name: build
+    strategy:
+      max-parallel: 6
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04-arm
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: checkoutactions
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: run
+      run: |
+        WHAT=cmd/kube-apiserver make quick-release-images WHAT=cmd/kube-apiserver
+        docker images
+        ls _output
+        echo "======================="
+        ls _output/release-images
+        echo "======================="
+        ls _output/images
+        echo "======================="
+        tree _output
+        echo "======================="
+        ls _output/release-stage/server/linux-arm64/kubernetes/server/bin
+        cat _output/release-stage/server/linux-arm64/kubernetes/server/bin/kube-apiserver.docker_tag
+        echo "======================="
+        rm -rf _output/dockerized
+        rm -rf _output/release-stage
+        docker load -i _output/release-images/arm64/kube-apiserver.tar
+        rm -f _output/release-images/arm64/kube-apiserver.tar
+        docker images
+        
+
+  buildnode:
+    name: build-node
+    strategy:
+      max-parallel: 6
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04-arm
+          - ubuntu-24.04
+    runs-on: ${{ matrix.os }}
+    permissions:
+      packages: write
+    steps:
+    - name: checkoutactions
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Login to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: $GITHUB_REPOSITORY_OWNER
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: run
+      shell: bash
+      run: |
+        export ARCH_NAME=`uname -m`
+        COMMITID=`git rev-parse --short HEAD`
+        if [ "$ARCH_NAME" != "x86_64" ];then
+          wget https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz
+          tar -xf linux-arm64.tgz
+          ls
+          chmod +x kind && mv kind /usr/local/bin/kind
+          IMGTAG=`git describe --tags`
+          kind build node-image --image ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 -v1
+          docker images
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-arm64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-arm64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-arm64 ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp
+
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-arm64
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-arm64
+
+          ls _output
+          echo "======================="
+          ls _output/release-images
+          echo "======================="
+          ls _output/images
+          echo "======================="
+          tree _output
+          echo "======================="
+
+        else
+          wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
+          tar -xf linux-amd64.tgz
+          ls
+          chmod +x kind && mv kind /usr/local/bin/kind
+          chmod +x e2e-k8s.sh
+          IMGTAG=`git describe --tags`
+          kind build node-image --image ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 -v1
+          docker images
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-amd64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-amd64
+          docker tag ghcr.io/liangyuanpeng/kubernetes/kindnode:${IMGTAG}-amd64 ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp
+
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:${COMMITID}-amd64
+          docker push ghcr.io/liangyuanpeng/kubernetes/kindnode:mvp-amd64
+        fi
+
+        kind create cluster --config .github/workflows/kind.yml --retain -v9
+
+    - name: run
+      shell: bash
+      run: |
+        kubectl get pod -A 
+        kubectl wait --timeout=1m --for=condition=ready pods --namespace=kube-system
+        kubectl get pod -A 
+        kubectl apply -f .github/workflows/demo.yaml
+        kubectl apply -f .github/workflows/deploy.yaml
+
+    - name: check artifacts
+      if: always()
+      run: |
+        kind export logs _artifacts
+        mkdir -p _artifacts
+        ls _artifacts
+
+    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3
+      if: always()
+      with:
+        name: test_mvp_${{ matrix.os }}
+        path: _artifacts
+
+  test:
+    name: test
+    strategy:
+      max-parallel: 6
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04-arm
+          - ubuntu-24.04-arm
+          - ubuntu-24.04
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: checkoutactions
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
+    - name: run
+      shell: bash
+      run: |
+        git tag -l > tags.log 
+        git describe --tags
+        export ARCH_NAME=`uname -m`
+        if [ "$ARCH_NAME" != "x86_64" ];then
+          wget https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz
+          tar -xf linux-arm64.tgz
+          ls
+          chmod +x kind && mv kind /usr/local/bin/kind
+          chmod +x e2e-k8s.sh
+          ./e2e-k8s.sh
+          #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz | tar xvfz - -C "${PATH%%:*}/" && e2e-k8s.sh
+        else
+          wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
+          tar -xf linux-amd64.tgz
+          ls
+          chmod +x kind && mv kind /usr/local/bin/kind
+          chmod +x e2e-k8s.sh
+          ./e2e-k8s.sh
+          #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz | tar xvfz - -C "${PATH%%:*}/" && e2e-k8s.sh
+        fi
+
+    - name: upload test logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2elogs_${{ matrix.os }}
+        path: _artifacts
+
+    # - name: run
+    #   run: |
+    #     wget https://kind.sigs.k8s.io/dl/latest/linux-amd64.tgz
+    #     tar -xf linux-amd64.tgz
+    #     chmod +x 
+    #     ls
+    #     kind create cluster
+    #     kubectl get pod -A
+    #     kubectl get node 
+    #     kubectl wait --timeout=1m --for=condition=ready pods --namespace=kube-system --all
+    #     echo "===========================finish waiting for kube-system pods==========================="
+    #     kubectl get pod -A
+    #     kubectl get node -A
+    #     kind delete cluster
+    #     chmod +x e2e-k8s.sh
+    #     e2e-k8s.sh
+    #     tree .
+    #     # TODO 创建多集群
+    #     #curl -sSL https://kind.sigs.k8s.io/dl/latest/linux-arm64.tgz | tar xvfz - -C "${PATH%%:*}/"
+
+    # - name: export logs
+    #   if: always()
+    #   run: |
+    #     docker ps -a
+    #     kind export logs /tmp/kind
+
+    #     ls
+    #     mv e2e.log _artifacts/testreport/
+    #     mv junit_01.xml _artifacts/testreport/
+
+    #     echo "==============================================begin cat e2e.log =============================================="
+    #     touch _artifacts/testreport/e2e.log
+    #     cat _artifacts/testreport/e2e.log
+    #     echo "==============================================done cat e2e.log =============================================="
+
+    #     sudo chmod -R 777 _artifacts
+
+    #     kubectl get pod -A
+
+    # - name: upload kind logs
+    #   if: always()
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: hydrophone_logs
+    #     path: /tmp/kind/
+
+    # - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+    #   if: always()
+    #   with:
+    #     name: hydrophone_testreport
+    #     path: _artifacts/testreport
+
+
+  pk-unit:
+    name: pk-unit
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 6
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+        goversion:
+          - "go.mod"
+          # - "1.22.1"
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+      - name: checkoutactions
+        uses: actions/checkout@v4
+        with:
+          repository: kubernetes/kubernetes
+          fetch-depth: 0
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-go@v5.0.2
+        if: matrix.goversion != 'go.mod'
+        with:
+          go-version: ${{ matrix.goversion }}
+      - uses: oras-project/setup-oras@main
+        with:
+          version: 1.2.0
+      - uses: actions/setup-go@v5.0.2
+        if: matrix.goversion == 'go.mod'
+        with:
+          go-version-file: go.mod
+      - name: run
+        run: |
+          make test
+      - name: check artifacts
+        if: always()
+        run: |
+          mkdir -p _artifacts
+          ls _artifacts
+
+      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3
+        if: always()
+        with:
+          name: pull_kubernetes_unit_${{ matrix.os }}
+          path: _artifacts

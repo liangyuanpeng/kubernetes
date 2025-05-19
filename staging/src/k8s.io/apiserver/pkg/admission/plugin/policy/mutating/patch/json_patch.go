@@ -21,9 +21,11 @@ import (
 	gojson "encoding/json"
 	"errors"
 	"fmt"
-	celgo "github.com/google/cel-go/cel"
+	"log"
 	"reflect"
 	"strconv"
+
+	celgo "github.com/google/cel-go/cel"
 
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/traits"
@@ -75,10 +77,12 @@ func (e *jsonPatcher) Patch(ctx context.Context, r Request, runtimeCELCostBudget
 		metav1.GroupVersionResource(r.MatchedResource),
 		metav1.GroupVersionKind(r.VersionedAttributes.VersionedKind))
 
+	log.Println("beginning CompilationErrors...")
 	compileErrors := e.PatchEvaluator.CompilationErrors()
 	if len(compileErrors) > 0 {
 		return nil, errors.Join(compileErrors...)
 	}
+	log.Println("beginning evaluatePatchExpression...")
 	patchObj, _, err := e.evaluatePatchExpression(ctx, e.PatchEvaluator, runtimeCELCostBudget, r, admissionRequest)
 	if err != nil {
 		return nil, err
@@ -86,9 +90,11 @@ func (e *jsonPatcher) Patch(ctx context.Context, r Request, runtimeCELCostBudget
 	o := r.ObjectInterfaces
 	jsonSerializer := json.NewSerializerWithOptions(json.DefaultMetaFactory, o.GetObjectCreater(), o.GetObjectTyper(), json.SerializerOptions{Pretty: false, Strict: true})
 	objJS, err := runtime.Encode(jsonSerializer, r.VersionedAttributes.VersionedObject)
+	log.Println("beginning Encode...")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create JSON patch: %w", err)
 	}
+	log.Println("beginning patch apply...")
 	patchedJS, err := patchObj.Apply(objJS)
 	if err != nil {
 		if errors.Is(err, jsonpatch.ErrTestFailed) {
@@ -98,6 +104,7 @@ func (e *jsonPatcher) Patch(ctx context.Context, r Request, runtimeCELCostBudget
 		return nil, fmt.Errorf("JSON Patch: %w", err)
 	}
 
+	log.Println("beginning object to Unstructured...")
 	var newVersionedObject runtime.Object
 	if _, ok := r.VersionedAttributes.VersionedObject.(*unstructured.Unstructured); ok {
 		newVersionedObject = &unstructured.Unstructured{}
@@ -108,6 +115,7 @@ func (e *jsonPatcher) Patch(ctx context.Context, r Request, runtimeCELCostBudget
 		}
 	}
 
+	log.Println("beginning object Decode...")
 	if newVersionedObject, _, err = jsonSerializer.Decode(patchedJS, nil, newVersionedObject); err != nil {
 		return nil, apierrors.NewInternalError(err)
 	}
