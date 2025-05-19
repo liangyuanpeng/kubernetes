@@ -142,7 +142,7 @@ jobs:
       shell: bash
       run: |
         kubectl get pod -A 
-        kubectl wait --timeout=1m --for=condition=ready pods --namespace=kube-system
+        kubectl wait --timeout=1m --for=condition=ready pods --namespace=kube-system --all
         kubectl get pod -A 
         kubectl apply -f .github/workflows/demo.yaml
         kubectl apply -f .github/workflows/deploy.yaml
