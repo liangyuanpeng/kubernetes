@@ -35,16 +35,24 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-22.04-arm
+          # - ubuntu-22.04-arm
           - ubuntu-24.04-arm
+          - ubuntu-24.04
     runs-on: ${{ matrix.os }}
     steps:
     - name: checkoutactions
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    - name: Login to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: $GITHUB_REPOSITORY_OWNER
+        password: ${{ secrets.GITHUB_TOKEN }}
     - name: run
       run: |
+        export ARCH_NAME=`uname -m`
         WHAT=cmd/kube-apiserver make quick-release-images WHAT=cmd/kube-apiserver
         docker images
         ls _output
@@ -55,13 +63,25 @@ jobs:
         echo "======================="
         tree _output
         echo "======================="
-        ls _output/release-stage/server/linux-arm64/kubernetes/server/bin
-        cat _output/release-stage/server/linux-arm64/kubernetes/server/bin/kube-apiserver.docker_tag
+        #ls _output/release-stage/server/linux-arm64/kubernetes/server/bin
+        #cat _output/release-stage/server/linux-arm64/kubernetes/server/bin/kube-apiserver.docker_tag
         echo "======================="
+        export IMG_TAG=`cat _output/release-stage/server/linux-arm64/kubernetes/server/bin/kube-apiserver.docker_tag`
         rm -rf _output/dockerized
         rm -rf _output/release-stage
-        docker load -i _output/release-images/arm64/kube-apiserver.tar
-        rm -f _output/release-images/arm64/kube-apiserver.tar
+
+        if [ "$ARCH_NAME" != "x86_64" ];then
+          docker load -i _output/release-images/arm64/kube-apiserver.tar
+          rm -f _output/release-images/arm64/kube-apiserver.tar
+          docker tag registry.k8s.io/kube-apiserver-arm64:${IMG_TAG} ghcr.io/liangyuanpeng/kubernetes/kube-apiserver-arm64:${IMG_TAG}
+          docker push ghcr.io/liangyuanpeng/kubernetes/kube-apiserver-arm64:${IMG_TAG}
+        else 
+          docker load -i _output/release-images/amd64/kube-apiserver.tar
+          rm -f _output/release-images/amd64/kube-apiserver.tar
+          docker tag registry.k8s.io/kube-apiserver-arm64:${IMG_TAG} ghcr.io/liangyuanpeng/kubernetes/kube-apiserver-amd64:${IMG_TAG}
+          docker push ghcr.io/liangyuanpeng/kubernetes/kube-apiserver-amd64:${IMG_TAG}
+        fi
+        
         docker images
         
 
