@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"k8s.io/api/admissionregistration/v1alpha1"
 	v1 "k8s.io/api/core/v1"
@@ -130,7 +131,8 @@ func (d *dispatcher) dispatchInvocations(
 
 	// Should loop through invocations, handling possible error and invoking
 	// evaluator to apply patch, also should handle re-invocations
-	for _, invocation := range invocations {
+	for invIndex, invocation := range invocations {
+		log.Println("==========================invIndex:", invIndex)
 		if invocation.Evaluator.CompositionEnv != nil {
 			ctx = invocation.Evaluator.CompositionEnv.CreateContext(ctx)
 		}
@@ -179,6 +181,7 @@ func (d *dispatcher) dispatchInvocations(
 			if versionedAttr.VersionedObject == nil { // Do not call patchers if there is no object to patch.
 				continue
 			}
+			log.Println("patch mutationIndex:", mutationIndex)
 
 			patcher := invocation.Evaluator.Mutators[mutationIndex]
 			optionalVariables := cel.OptionalVariableBindings{VersionedParams: invocation.Param, Authorizer: authz}

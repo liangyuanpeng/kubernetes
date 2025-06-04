@@ -77,6 +77,12 @@ func (e *jsonPatcher) Patch(ctx context.Context, r Request, runtimeCELCostBudget
 		metav1.GroupVersionResource(r.MatchedResource),
 		metav1.GroupVersionKind(r.VersionedAttributes.VersionedKind))
 
+	b, err := gojson.Marshal(r.VersionedAttributes)
+	if err != nil {
+		return nil, err
+	}
+	log.Println("request:", string(b))
+
 	log.Println("beginning CompilationErrors...")
 	compileErrors := e.PatchEvaluator.CompilationErrors()
 	if len(compileErrors) > 0 {
@@ -87,6 +93,12 @@ func (e *jsonPatcher) Patch(ctx context.Context, r Request, runtimeCELCostBudget
 	if err != nil {
 		return nil, err
 	}
+	jsonBytes, err := gojson.Marshal(patchObj)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("patchObj....:", string(jsonBytes))
+
 	o := r.ObjectInterfaces
 	jsonSerializer := json.NewSerializerWithOptions(json.DefaultMetaFactory, o.GetObjectCreater(), o.GetObjectTyper(), json.SerializerOptions{Pretty: false, Strict: true})
 	objJS, err := runtime.Encode(jsonSerializer, r.VersionedAttributes.VersionedObject)
@@ -94,7 +106,7 @@ func (e *jsonPatcher) Patch(ctx context.Context, r Request, runtimeCELCostBudget
 	if err != nil {
 		return nil, fmt.Errorf("failed to create JSON patch: %w", err)
 	}
-	log.Println("beginning patch apply...")
+	log.Println("beginning patch apply...", string(objJS))
 	patchedJS, err := patchObj.Apply(objJS)
 	if err != nil {
 		if errors.Is(err, jsonpatch.ErrTestFailed) {
